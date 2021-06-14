@@ -7,22 +7,29 @@ export enum ButtonState {
   Selected
 }
 
-export type ActionButtonProps = {}
+export type ActionButtonProps = React.ButtonHTMLAttributes<{}>
 
 export const IDEActionButton: React.FC<ActionButtonProps> = (props) => {
 
-
   return (
-    <IDEStyledActionButton>
-
+    <IDEStyledActionButton {...props}>
+      {props.children}
     </IDEStyledActionButton>
   )
 }
 
 
-export type ActionSectionProps = {}
+export type ActionSectionProps = {
+  checked?: boolean;
+  onSelect: () => void;
+}
 
 export const IDEActionSection:  React.FC<ActionSectionProps> = (props) => {
+  const { children, onSelect, ...restProps } = props;
 
-  return null
+  return (
+    <IDEActionButton {...restProps} onClick={onSelect}>
+      {children}
+    </IDEActionButton>
+  )
 }

@@ -1,8 +1,19 @@
+import React from "react";
 import Head from "next/head";
 import styled from "styled-components";
 
-import { HomeContainer, Footer, ApplicationColor } from "./styled";
 import { IDEActionSection } from "components/core/ActionSection";
+
+import {
+  HomeContainer,
+  Footer,
+  ApplicationColor,
+  FilesystemSection,
+  IDEActionsFlex,
+  LogoContainer,
+  MainTabSection,
+  ViewSelectSection,
+} from "./styled";
 
 const RightSeparated = styled.div`
   border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -26,128 +37,175 @@ const Text = styled.span`
   font-size: 18px;
 `;
 
-enum FileSystemEntityKind {
-  File,
-  Directory,
-}
+export const FileExplorerHeading = styled(Heading)`
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 33px;
+`;
+export const FileExplorerSubHeading = styled(FileExplorerHeading)`
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 24px;
+  /* identical to box height */
 
-// class Iterator<T> {
+  color: rgba(255, 255, 255, 0.4);
+`;
 
-// }
+export const ExplorerHeadingContainer = styled.div`
+  padding: 54px 28px 28px 16px;
+`;
 
-type FileSystemEntityMeta = {
-  icon?: string;
-  name: string;
-};
+export const ExplorerWorkspaceLabel = styled.h3`
+  background: rgba(54, 79, 191, 0.1);
+  padding: 12px 28px;
+  height: 48px;
+  margin: 0;
 
-class FileSystemEntity {
-  kind: FileSystemEntityKind;
-  internal: FileSystemEntity[];
-  meta: FileSystemEntityMeta;
+  color: rgba(54, 79, 191, 1);
 
-  constructor(kind: FileSystemEntityKind, meta: FileSystemEntityMeta) {
-    this.kind = kind;
-    this.meta = meta;
-    this.internal = [];
-  }
-
-  static new_file(meta: FileSystemEntityMeta): FileSystemEntity {
-    return new FileSystemEntity(FileSystemEntityKind.File, meta);
-  }
-
-  static new_dir(meta: FileSystemEntityMeta): FileSystemEntity {
-    return new FileSystemEntity(FileSystemEntityKind.Directory, meta);
-  }
-
-  is_file(): boolean {
-    return this.kind === FileSystemEntityKind.File;
-  }
-
-  is_dir(): boolean {
-    return !this.is_file();
-  }
-
-  push_file(file: FileSystemEntity) {
-    if (!this.is_dir()) return;
-
-    this.internal.push(file);
-  }
-
-  push_dir(dir: FileSystemEntity) {
-    if (!this.is_dir()) return;
-
-    this.internal.push(dir);
-  }
-
-  static dir_with_entities(meta: FileSystemEntityMeta, list: FileSystemEntity[]) {
-    // if (!this.is_dir()) return null;
-    const entity = FileSystemEntity.new_dir(meta);
-    entity.internal = entity.internal.concat(list);
-    return entity
-  }
-}
-
-class FileSystemSnake {
-  entitiesList: FileSystemEntity[];
-
-  constructor(list: FileSystemEntity[]) {
-    this.entitiesList = list;
-  }
-}
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+`;
 
 const MainEditingBody: React.FC<{}> = () => {
-  const filesystem = new FileSystemSnake([
-    FileSystemEntity.new_file({ name: "main.so" }),
-    FileSystemEntity.dir_with_entities({ name: "some_stuff" }, [
-      FileSystemEntity.new_file({ name: "sh.so" }),
-    ]),
-  ]);
+  // const filesystem = new FileSystemSnake([
+  //   FileSystemEntity.new_file({ name: "main.so" }),
+  //   FileSystemEntity.dir_with_entities({ name: "some_stuff" }, [
+  //     FileSystemEntity.new_file({ name: "sh.so" }),
+  //   ]),
+  // ]);
 
-  console.log({ filesystem })
+  // console.log({ filesystem });
 
   return null;
 };
 
+
+export type FSAbstractItemProps = {
+  name: string;
+  depthLevel: number; // zero-based
+}
+
+export const FSAbstractItemContainer = styled.div`
+  ${props => `
+    & img {
+      margin-left: ${10 * (props.depth ?? 0)}px;
+    }
+  `}
+
+  & :not(:first-child) {
+    margin-top: 12px;
+  }
+
+  & h3 {
+    margin: 0;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 24px;
+    padding-left: 12px;
+  };
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+
+  padding: 6px 0;
+
+  cursor: pointer;
+
+  & :hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+`
+
+export const FSAbstractItem: React.FC<FSAbstractItemProps> = props => {
+
+
+  return (
+    <FSAbstractItemContainer depth={props.depthLevel}>
+      <img src="/app/filesystem/dir.svg"/>
+      <MediumHeading>{props.name}</MediumHeading>
+      <div />
+    </FSAbstractItemContainer>
+  )
+}
+
+export const StyledExplorerFileSystem = styled.div`
+  padding: 29.69px;
+`
+
+export const ExplorerFileSystem: React.FC<{}> = props => {
+
+  return (
+    <StyledExplorerFileSystem>
+      <FSAbstractItem name="Contracts" depthLevel={0}/>
+      <FSAbstractItem name="Artifacts" depthLevel={1}/>
+      <FSAbstractItem name="metadata.json" depthLevel={2}/>
+    </StyledExplorerFileSystem>
+  )
+}
+
 export default function Home() {
+  const [currentSection, setCurrentSection] = React.useState(0);
+
+  type Section = { text: string };
+  const ideSectionList: Section[] = [
+    {
+      text: "File Explorers",
+    },
+    {
+      text: "Compiler",
+    },
+    {
+      text: "Transactions",
+    },
+  ];
+
   return (
     <div className="container">
       <Head>
-        <title>Create Next App</title>
+        <title>Selenium | Develop</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <HomeContainer>
         {/* <IDEActionSection></IDEActionSection> */}
 
-        <div style={{ width: 297, height: "100%" }} className="separator">
-          <div
-            style={{
-              padding: "32px 28px",
-              display: "flex",
-              flexDirection: "row",
-              flexWrap: "nowrap",
-              alignItems: "center",
-            }}
-          >
-            <img
-              src="/app/selenium.svg"
-              style={{ width: 140, paddingRight: 16 }}
-            />
-            <h3 style={{ color: "white" }}>Selenium</h3>
-          </div>
+        <ViewSelectSection className="separator">
+          <LogoContainer>
+            <img src="/app/selenium.svg" />
+            <MediumHeading>Selenium</MediumHeading>
+          </LogoContainer>
 
-          {/* <Separator /> */}
-        </div>
-        <div
-          style={{ width: 268, height: "100%", padding: 16 }}
-          className="separator"
-        >
-          1
-        </div>
-        <div style={{ padding: 16 }}>
+          <IDEActionsFlex>
+            {ideSectionList.map((x, i) => (
+              <IDEActionSection
+                key={x.text}
+                checked={i === currentSection}
+                onSelect={() => setCurrentSection(i)}
+              >
+                {x.text}
+              </IDEActionSection>
+            ))}
+          </IDEActionsFlex>
+        </ViewSelectSection>
+
+        <FilesystemSection className="separator">
+          <ExplorerHeadingContainer>
+            <FileExplorerHeading>File Explorers</FileExplorerHeading>
+            <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading>
+          </ExplorerHeadingContainer>
+          <ExplorerWorkspaceLabel>default_workspace</ExplorerWorkspaceLabel>
+          <ExplorerFileSystem />
+        </FilesystemSection>
+        <MainTabSection>
           <Heading>Text Editor</Heading>
           <MainEditingBody />
-        </div>
+        </MainTabSection>
       </HomeContainer>
       <Footer />
 
