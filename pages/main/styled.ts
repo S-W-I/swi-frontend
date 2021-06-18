@@ -25,7 +25,7 @@ export const Footer = styled.footer`
 
 export const ViewSelectSection = styled.div`
   width: 297px;
-  height: "100%";
+  height: 100%;
 `
 export const FilesystemSection = styled.div`
   width: 268px;
@@ -33,7 +33,8 @@ export const FilesystemSection = styled.div`
 `
 
 export const MainTabSection = styled.div`
-  padding: 16px;
+  width: calc(100vw - 565px);
+  height: 100vh;
 `
 
 export const LogoContainer = styled.div`

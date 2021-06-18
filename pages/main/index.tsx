@@ -3,6 +3,8 @@ import Head from "next/head";
 import styled from "styled-components";
 
 import { IDEActionSection } from "components/core/ActionSection";
+import { MainLogConsole } from "components/core/editing/LogConsole";
+
 import {
   FileSystemEntity,
   FileSystemEntityKind,
@@ -75,7 +77,190 @@ export const ExplorerWorkspaceLabel = styled.h3`
   line-height: 24px;
 `;
 
-const MainEditingBody: React.FC<{}> = () => {
+export const MainEditingBodyContainer = styled.div`
+  height: calc(100% - 40px - 197px);
+`
+
+export const MainEditingBodyTopBar = styled.div`
+  background-color: rgb(9, 11, 38);
+  height: 40px;
+  width: 100%;
+
+  color: white;
+  font-family: Courier;
+  line-height: 24px;
+  padding-top: 6px;
+  padding-left: 64px;
+`
+
+export const MainEditingBodyFile = styled.div`
+  background-color: rgb(17, 19, 46);
+  height: 100%;
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+
+  position: relative;
+`
+
+export const StyledMainEditingBodyLineCounter = styled.div`
+  background-color: rgb(41, 43, 67);
+  width: 54px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+
+  line-height: 24px;
+
+  & div {
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    font-family: Courier;
+    font-style: normal;
+    font-weight: normal;
+  }
+`
+
+const MainEditingBodyLineCounter: React.FC<{ numberOfLines: number }> = props => {
+
+  return (
+    <StyledMainEditingBodyLineCounter>
+      {Array(props.numberOfLines).fill(null).map((x, i)=> <div>{i + 1}</div>)}
+    </StyledMainEditingBodyLineCounter>
+  )
+}
+
+export const MainEditingBodyCodeInput = styled.textarea`
+  background-color: rgb(17, 19, 46);
+  border: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  color: white;
+
+
+  font-family: Courier;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+
+  padding-top: 0;
+  padding-left: 16px;
+
+  line-height: 24px;
+
+  width: 100%;
+`
+
+export const CurrentLineIndicator = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 22px;
+  background: rgba(255, 0, 255, 0.5);
+
+  ${props => `
+    top: ${24 * props.lineNumber}px;
+  `}
+`
+
+
+const mockFile = `
+use byteorder::{ByteOrder, LittleEndian};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint,
+    entrypoint::ProgramResult,
+    msg,
+    program_error::ProgramError,
+    pubkey::Pubkey,
+};
+// use solana_sdk::system_instruction::SystemInstruction;
+use std::mem;
+
+// Declare and export the program's entrypoint
+entrypoint!(process_instruction);
+
+// Program entrypoint's implementation
+pub fn process_instruction(
+    program_id: &Pubkey, // Public key of the account the hello world program was loaded into
+    accounts: &[AccountInfo], // The account to say hello to
+    _instruction_data: &[u8], // Ignored, all helloworld instructions are hellos
+) -> ProgramResult {
+    msg!("Helloworld Rust program entrypoint");
+
+    // Iterating accounts is safer then indexing
+    let accounts_iter = &mut accounts.iter();
+
+    // Get the account to say hello to
+    let account = next_account_info(accounts_iter)?;
+
+    // The account must be owned by the program in order to modify its data
+    if account.owner != program_id {
+        msg!("Greeted account does not have the correct program id");
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    // The data must be large enough to hold a u32 count
+    if account.try_data_len()? < mem::size_of::<u32>() {
+        msg!("Greeted account data length too small for u32");
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    // Increment and store the number of times the account has been greeted
+    let mut data = account.try_borrow_mut_data()?;
+    let mut num_greets = LittleEndian::read_u32(&data);
+    num_greets += 1;
+    LittleEndian::write_u32(&mut data[0..], num_greets);
+
+    msg!("Hello!");
+
+    Ok(())
+}
+
+// Sanity tests
+#[cfg(test)]
+mod test {
+    use super::*;
+    use solana_program::clock::Epoch;
+
+    #[test]
+    fn test_sanity() {
+        let program_id = Pubkey::default();
+        let key = Pubkey::default();
+        let mut lamports = 0;
+        let mut data = vec![0; mem::size_of::<u32>()];
+        LittleEndian::write_u32(&mut data, 0);
+
+        let owner = Pubkey::default();
+        let account = AccountInfo::new(
+            &key,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            Epoch::default(),
+        );
+        let instruction_data: Vec<u8> = Vec::new();
+
+        let accounts = vec![account];
+
+        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()), 0);
+        process_instruction(&program_id, &accounts, &instruction_data).unwrap();
+        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()), 1);
+        process_instruction(&program_id, &accounts, &instruction_data).unwrap();
+        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()), 2);
+    }
+}
+`
+
+const MainEditingBody: React.FC<{ fileEntity: FileSystemSnake }> = (props) => {
   // const filesystem = new FileSystemSnake([
   //   FileSystemEntity.new_file({ name: "main.so" }),
   //   FileSystemEntity.dir_with_entities({ name: "some_stuff" }, [
@@ -85,7 +270,25 @@ const MainEditingBody: React.FC<{}> = () => {
 
   // console.log({ filesystem });
 
-  return null;
+  const [inputCode, setInputCode] = React.useState(mockFile)
+  const numberOfLines = inputCode.split(/\r\n|\r|\n/).length
+  console.log({ numberOfLines })
+
+  return (
+    <MainEditingBodyContainer>
+      {/* <MainEditingBodyTopBar>{props.fileEntity.flatten()[0].meta.name}</MainEditingBodyTopBar> */}
+      <MainEditingBodyTopBar>lib.rs</MainEditingBodyTopBar>
+      <MainEditingBodyFile>
+        {/* <MainEditingBodyLineCounter numberOfLines={numberOfLines}/> */}
+        <MainEditingBodyCodeInput value={inputCode} initialValue={mockFile} onChange={x => {
+          // console.log({ x: x.target.value })
+          setInputCode(x.target.value)
+        }}/>
+        {/* <CurrentLineIndicator lineNumber={numberOfLines - 1}/> */}
+      </MainEditingBodyFile>
+      <MainLogConsole />
+    </MainEditingBodyContainer>
+  );
 };
 
 export type FSAbstractItemProps = {
@@ -148,22 +351,12 @@ export const FSAbstractItem: React.FC<
 
 export const StyledExplorerFileSystem = styled.div`
   padding: 29.69px;
+  overflow: auto;
+  height: calc(100vh - 187px);
 `;
 
-export const ExplorerFileSystem: React.FC<{}> = (props) => {
-  const filesystem = new FileSystemSnake([
-    // FileSystemEntity.new_file({ name: "file.so" }),
-    FileSystemEntity.dir_with_entities({ name: "src" }, [
-      FileSystemEntity.new_file({ name: "lib.rs" }),
-    ]).populateDepth(),
-    FileSystemEntity.dir_with_entities({ name: "tests" }, [
-      FileSystemEntity.new_file({ name: "lib.rs" }),
-    ]).populateDepth(),
-    FileSystemEntity.new_file({ name: "Cargo.lock" }),
-    FileSystemEntity.new_file({ name: "Cargo.toml" }),
-    FileSystemEntity.new_file({ name: "Xargo.toml" }),
-  ])
-
+export const ExplorerFileSystem: React.FC<{ filesystem: FileSystemSnake }> = (props) => {
+  const { filesystem } = props
 
   console.log({ filesystem });
 
@@ -238,6 +431,20 @@ export default function Home() {
     },
   ];
 
+  const filesystem = new FileSystemSnake([
+    // FileSystemEntity.new_file({ name: "file.so" }),
+    FileSystemEntity.dir_with_entities({ name: "src" }, [
+      FileSystemEntity.new_file({ name: "lib.rs" }),
+    ]).populateDepth(),
+    FileSystemEntity.dir_with_entities({ name: "tests" }, [
+      FileSystemEntity.new_file({ name: "lib.rs" }),
+    ]).populateDepth(),
+    FileSystemEntity.new_file({ name: "Cargo.lock" }),
+    FileSystemEntity.new_file({ name: "Cargo.toml" }),
+    FileSystemEntity.new_file({ name: "Xargo.toml" }),
+  ])
+
+
   return (
     <div className="container">
       <Head>
@@ -259,7 +466,7 @@ export default function Home() {
               <IDEActionSection
                 key={x.text}
                 checked={i === currentSection}
-                onSelect={() => setCurrentSection(i)}
+                onSelect={() => (i)}
               >
                 {x.text}
               </IDEActionSection>
@@ -273,11 +480,10 @@ export default function Home() {
             <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading>
           </ExplorerHeadingContainer>
           <ExplorerWorkspaceLabel>default_workspace</ExplorerWorkspaceLabel>
-          <ExplorerFileSystem />
+          <ExplorerFileSystem filesystem={filesystem} />
         </FilesystemSection>
         <MainTabSection>
-          <Heading>Text Editor</Heading>
-          <MainEditingBody />
+          <MainEditingBody fileEntity={filesystem}/>
         </MainTabSection>
       </HomeContainer>
       <Footer />
