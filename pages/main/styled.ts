@@ -47,6 +47,7 @@ export const LogoContainer = styled.div`
   & img {
     width: 140px;
     padding-right: 16px;
+    margin-right: -33px;
   }
 `
 

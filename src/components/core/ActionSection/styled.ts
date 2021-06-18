@@ -18,6 +18,12 @@ export const IDEStyledActionButton = styled.button`
   font-size: 16px;
   font-weight: bold;
   border: none;
+  
+  font-family: Poppins;
+  font-style: normal;
+  font-weight: normal;
+
+  line-height: 24px;
 
   cursor: pointer;
 
