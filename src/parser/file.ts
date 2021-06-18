@@ -1,4 +1,4 @@
-enum FileSystemEntityKind {
+export enum FileSystemEntityKind {
   File,
   Directory,
 }
@@ -7,20 +7,29 @@ enum FileSystemEntityKind {
 
 // }
 
-type FileSystemEntityMeta = {
+export type FileSystemEntityMeta = {
   icon?: string;
   name: string;
 };
 
-class FileSystemEntity {
+export class FileSystemEntity {
   kind: FileSystemEntityKind;
   internal: FileSystemEntity[];
   meta: FileSystemEntityMeta;
+  depth: number;
+  parent: null | FileSystemEntity
+
+  is_dir_opened: boolean;
 
   constructor(kind: FileSystemEntityKind, meta: FileSystemEntityMeta) {
     this.kind = kind;
     this.meta = meta;
     this.internal = [];
+
+    this.parent = null
+    this.depth = 0
+
+    this.is_dir_opened = true
   }
 
   static new_file(meta: FileSystemEntityMeta): FileSystemEntity {
@@ -37,6 +46,16 @@ class FileSystemEntity {
 
   is_dir(): boolean {
     return !this.is_file();
+  }
+
+  open_dir() {
+    if (!this.is_dir()) return;
+    this.is_dir_opened = true
+  }
+
+  close_dir() {
+    if (!this.is_dir()) return;
+    this.is_dir_opened = false
   }
 
   push_file(file: FileSystemEntity) {
@@ -60,12 +79,51 @@ class FileSystemEntity {
     entity.internal = entity.internal.concat(list);
     return entity;
   }
+
+  populateDepth() {
+    const populate = (depth: number, parent: FileSystemEntity, internal: FileSystemEntity[]) => {
+      if (internal.length === 0) return;
+
+      for (let i = 0; i < internal.length; i++) {
+        const entity = internal[i]
+
+        if (entity.is_dir()) {
+          entity.is_dir_opened = true
+        }
+
+        entity.depth = depth
+        entity.parent = parent
+        populate(depth + 1, entity, entity.internal)
+      }
+    }
+
+    populate(this.depth + 1, this, this.internal)
+
+    return this
+  }
 }
 
-class FileSystemSnake {
+export class FileSystemSnake {
   entitiesList: FileSystemEntity[];
 
   constructor(list: FileSystemEntity[]) {
     this.entitiesList = list;
+  }
+
+  flatten(): FileSystemEntity[] {
+    const res = []
+
+    const iterate = (startList: FileSystemEntity[]) => {
+      if (startList.length === 0) return;
+
+      for (const item of startList) {
+        res.push(item)
+
+        iterate(item.internal)
+      }
+    }
+    iterate(this.entitiesList)
+
+    return res
   }
 }

@@ -3,6 +3,12 @@ import Head from "next/head";
 import styled from "styled-components";
 
 import { IDEActionSection } from "components/core/ActionSection";
+import {
+  FileSystemEntity,
+  FileSystemEntityKind,
+  FileSystemEntityMeta,
+  FileSystemSnake,
+} from "parser/file";
 
 import {
   HomeContainer,
@@ -82,14 +88,14 @@ const MainEditingBody: React.FC<{}> = () => {
   return null;
 };
 
-
 export type FSAbstractItemProps = {
   name: string;
   depthLevel: number; // zero-based
-}
+  imgPath: string;
+};
 
 export const FSAbstractItemContainer = styled.div`
-  ${props => `
+  ${(props) => `
     & img {
       margin-left: ${10 * (props.depth ?? 0)}px;
     }
@@ -106,7 +112,7 @@ export const FSAbstractItemContainer = styled.div`
     font-size: 16px;
     line-height: 24px;
     padding-left: 12px;
-  };
+  }
 
   display: flex;
   flex-direction: row;
@@ -119,35 +125,102 @@ export const FSAbstractItemContainer = styled.div`
   & :hover {
     background-color: rgba(255, 255, 255, 0.05);
   }
+`;
 
-`
-
-export const FSAbstractItem: React.FC<FSAbstractItemProps> = props => {
-
+export const FSAbstractItem: React.FC<
+  FSAbstractItemProps & React.HTMLProps<{}>
+> = (props) => {
+  const { name, depthLevel, onClick, imgPath, ...restProps } = props;
 
   return (
-    <FSAbstractItemContainer depth={props.depthLevel}>
-      <img src="/app/filesystem/dir.svg"/>
-      <MediumHeading>{props.name}</MediumHeading>
+    <FSAbstractItemContainer
+      depth={depthLevel}
+      onClick={onClick}
+      {...restProps}
+    >
+      {/* <img src="/app/filesystem/dir.svg" /> */}
+      <img src={imgPath} />
+      <MediumHeading>{name}</MediumHeading>
       <div />
     </FSAbstractItemContainer>
-  )
-}
+  );
+};
 
 export const StyledExplorerFileSystem = styled.div`
   padding: 29.69px;
-`
+`;
 
-export const ExplorerFileSystem: React.FC<{}> = props => {
+export const ExplorerFileSystem: React.FC<{}> = (props) => {
+  const filesystem = new FileSystemSnake([
+    // FileSystemEntity.new_file({ name: "file.so" }),
+    FileSystemEntity.dir_with_entities({ name: "src" }, [
+      FileSystemEntity.new_file({ name: "lib.rs" }),
+    ]).populateDepth(),
+    FileSystemEntity.dir_with_entities({ name: "tests" }, [
+      FileSystemEntity.new_file({ name: "lib.rs" }),
+    ]).populateDepth(),
+    FileSystemEntity.new_file({ name: "Cargo.lock" }),
+    FileSystemEntity.new_file({ name: "Cargo.toml" }),
+    FileSystemEntity.new_file({ name: "Xargo.toml" }),
+  ])
+
+
+  console.log({ filesystem });
+
+  const onFSItemClick = (x: FileSystemEntity) => {
+    console.log({
+      name: x.meta.name,
+      is_dir_opened: x.is_dir_opened,
+      parent: x.parent,
+    });
+  };
+
+  const retrieveImgIcon = (name: string): string => {
+    let imgPath = "/app/filesystem/json.svg";
+    if (name.indexOf(".") === -1) {
+      return "/app/filesystem/dir.svg";
+    } else {
+      const extension = name.slice(name.lastIndexOf(".") + 1);
+
+      switch (extension) {
+        case "so":
+          return "/app/filesystem/so.svg";
+        case "txt":
+          return "/app/filesystem/txt.svg";
+        case "json":
+          return "/app/filesystem/json.svg";
+      }
+    }
+    return imgPath;
+  };
+
+  const items = filesystem.flatten();
+
+  // let hidden_triggered = false
+  const fsAbstractItems = items
+    .map((x, i) => {
+      const imgPath = retrieveImgIcon(x.meta.name);
+
+      return (
+        <FSAbstractItem
+          key={i + x.depth + x.meta.name + x.is_dir_opened}
+          name={x.meta.name}
+          imgPath={imgPath}
+          depthLevel={x.depth}
+          onClick={() => onFSItemClick(x)}
+        />
+      );
+    });
 
   return (
     <StyledExplorerFileSystem>
-      <FSAbstractItem name="Contracts" depthLevel={0}/>
+      {/* <FSAbstractItem name="Contracts" depthLevel={0}/>
       <FSAbstractItem name="Artifacts" depthLevel={1}/>
-      <FSAbstractItem name="metadata.json" depthLevel={2}/>
+      <FSAbstractItem name="metadata.json" depthLevel={2}/> */}
+      {fsAbstractItems}
     </StyledExplorerFileSystem>
-  )
-}
+  );
+};
 
 export default function Home() {
   const [currentSection, setCurrentSection] = React.useState(0);
