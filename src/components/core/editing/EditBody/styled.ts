@@ -96,5 +96,6 @@ export const StyledMainTextAreaLine = styled.div`
 export const StyledMainTextAreaWord = styled.span`
   // background: green;
   color: ${(props) => props.color};
-  margin-right: 8px;
+  // margin-right: 8px;
+  margin-right: ${(props) => (!props.indistinct ? "8px" : "")};
 `;

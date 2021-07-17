@@ -14,12 +14,20 @@ import {
 } from "./styled";
 
 class EditViewColors {
+  static Default = "white";
   static Class = "violet";
   static DeclarationKeyword = "rgb(55, 190, 181)";
   static FnName = "rgb(17, 166, 193)";
   static Variable = "rgb(159, 41, 70)";
   static Commented = "gray";
+  static Ref = "gold";
 }
+
+const isAlphabetCharacter = (charCode: number) => {
+  return (
+    (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)
+  );
+};
 
 const MainTextArea: React.FC<{ code: string }> = (props) => {
   if (!props.code) {
@@ -27,6 +35,7 @@ const MainTextArea: React.FC<{ code: string }> = (props) => {
   }
 
   const splittedCode = props.code.split("\n");
+
   const html = splittedCode.map((line) => {
     if (line.slice(0, 2) === "//") {
       return (
@@ -37,41 +46,103 @@ const MainTextArea: React.FC<{ code: string }> = (props) => {
         </StyledMainTextAreaLine>
       );
     }
+
+    let isCommentedLine = false;
+
     const lineByWords = line.split(" ").map((word, i, words) => {
       let color = "white";
       const [prev, next] = [words[i - 1], words[i + 1]];
 
-      if (["impl", "pub"].includes(word)) {
-        color = EditViewColors.Variable;
+      // if (prev && isAlphabetCharacter(prev.charCodeAt(0)) && word === "!" && next && next === )
+
+      if (isCommentedLine) {
+        return (
+          <StyledMainTextAreaWord color={EditViewColors.Commented}>
+            {word}
+          </StyledMainTextAreaWord>
+        );
       }
-      if (["use", "crate"].includes(word)) {
+      if ("//" === word) {
+        isCommentedLine = true;
+        return (
+          <StyledMainTextAreaWord color={EditViewColors.Commented}>
+            {word}
+          </StyledMainTextAreaWord>
+        );
+      }
+      if ("let" === word) {
+        return (
+          <StyledMainTextAreaWord color={EditViewColors.Class}>
+            {word}
+          </StyledMainTextAreaWord>
+        );
+      }
+
+      if ("&mut" === word) {
+        return [
+          <StyledMainTextAreaWord indistinct color={EditViewColors.Commented}>
+            &
+          </StyledMainTextAreaWord>,
+          <StyledMainTextAreaWord color={EditViewColors.Ref}>
+            mut
+          </StyledMainTextAreaWord>,
+        ];
+      }
+      if (["!=", "==", "<", ">", "<=", ">="].includes(word)) {
+        const [left, right] = word.split("");
+        return [
+          <StyledMainTextAreaWord indistinct color={EditViewColors.Ref}>
+            {left}
+          </StyledMainTextAreaWord>,
+          <StyledMainTextAreaWord color={EditViewColors.Ref}>
+            {right}
+          </StyledMainTextAreaWord>,
+        ];
+      }
+
+      if (["impl", "pub", "use", "crate"].includes(word)) {
         color = EditViewColors.DeclarationKeyword;
+      }
+      if (word[0] && word[0] === word[0].toUpperCase()) {
+        const color = EditViewColors.Class;
+
+        return [
+          word.split("").map((x) => {
+            if (["[", "]", "&"].includes(x)) {
+              return (
+                <StyledMainTextAreaWord
+                  indistinct
+                  color={EditViewColors.Commented}
+                >
+                  {x}
+                </StyledMainTextAreaWord>
+              );
+            }
+
+            if (isAlphabetCharacter(x.charCodeAt(0)) || x === "_") {
+              return (
+                <StyledMainTextAreaWord indistinct color={color}>
+                  {x}
+                </StyledMainTextAreaWord>
+              );
+            }
+            return (
+              <StyledMainTextAreaWord indistinct color={EditViewColors.Default}>
+                {x}
+              </StyledMainTextAreaWord>
+            );
+          }),
+          <StyledMainTextAreaWord
+            color={EditViewColors.Default}
+          ></StyledMainTextAreaWord>,
+        ];
+        // <StyledMainTextAreaWord color={color}>{word}</StyledMainTextAreaWord>
       }
 
       if (["("].includes(word)) {
-        color = EditViewColors.DeclarationKeyword;
-      }
-      // '::ProgramError' pattern
-      if (word.includes("::")) {
-        // color = EditViewColors.Class
-        // const path = word.split("::");
-        // return (
-        //   path.map((pX, pI, pA) => {
-        //     if (pA.length - 1 === pI) {
-        //       return [
-        //         <StyledMainTextAreaWord color={"white"}>
-        //           ::
-        //         </StyledMainTextAreaWord>,
-        //         <StyledMainTextAreaWord color={EditViewColors.Class}>
-        //           {pX}
-        //         </StyledMainTextAreaWord>,
-        //       ];
-        //     }
-        //     <StyledMainTextAreaWord color={"white"}>
-        //       {pX}
-        //     </StyledMainTextAreaWord>;
-        //   })
-        // );
+        <StyledMainTextAreaWord color={EditViewColors.FnName}>
+          {word}
+        </StyledMainTextAreaWord>;
       }
 
       return (
