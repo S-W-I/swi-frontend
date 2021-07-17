@@ -80,7 +80,8 @@ export const FileExplorerSubHeading = styled(FileExplorerHeading)`
 `;
 
 export const ExplorerHeadingContainer = styled.div`
-  padding: 54px 28px 28px 16px;
+  // padding: 54px 28px 28px 16px;
+  padding: 54px 28px 28px 28px;
 `;
 
 export const ExplorerWorkspaceLabel = styled.h3`

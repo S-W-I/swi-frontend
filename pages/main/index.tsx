@@ -27,8 +27,15 @@ import {
   MainEditingBody,
   EditingBodyProps,
 } from "components/core/editing/EditBody";
+
 import { MediumHeading } from "components/common/Text/styled";
+
+import { Checkbox } from "components/common/Checkbox";
+import { SelectList } from "components/common/SelectList";
+
 import { ExplorerFileSystem } from "components/core/fs/ExplorerFileSystem";
+import { CompilerSection } from "components/core/compiler/CompilerSection";
+
 import {
   ExplorerHeadingContainer,
   FileExplorerHeading,
@@ -66,6 +73,7 @@ const ideSectionList: Section[] = [
 
 export default function Home() {
   const [currentSection, setCurrentSection] = React.useState(
+    // SectionType.FileExplorers
     SectionType.Compiler
   );
   const [currentSelectedFile, setCurrentSelectedFile] =
@@ -125,6 +133,33 @@ export default function Home() {
   };
   console.log({ filesystem: editableFileSystem.filesystem, editingBodyProps });
 
+  const sectionsMapping = {
+    [SectionType.FileExplorers]: (
+      <FilesystemSection className="separator">
+        <ExplorerHeadingContainer>
+          <FileExplorerHeading>File Explorers</FileExplorerHeading>
+          <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading>
+        </ExplorerHeadingContainer>
+        <ExplorerWorkspaceLabel>default_workspace</ExplorerWorkspaceLabel>
+        <ExplorerFileSystem
+          filesystem={editableFileSystem.filesystem}
+          onSelectFile={(filename) => setCurrentSelectedFile(filename)}
+        />
+      </FilesystemSection>
+    ),
+    [SectionType.Compiler]: (
+      <FilesystemSection className="separator">
+        <ExplorerHeadingContainer>
+          <FileExplorerHeading>Solana Compiler</FileExplorerHeading>
+          {/* <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading> */}
+
+          <CompilerSection />
+        </ExplorerHeadingContainer>
+      </FilesystemSection>
+    ),
+  };
+  const currentSectionComponent = sectionsMapping[currentSection];
+
   return (
     <div className="container">
       <Head>
@@ -154,17 +189,7 @@ export default function Home() {
           </IDEActionsFlex>
         </ViewSelectSection>
 
-        <FilesystemSection className="separator">
-          <ExplorerHeadingContainer>
-            <FileExplorerHeading>File Explorers</FileExplorerHeading>
-            <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading>
-          </ExplorerHeadingContainer>
-          <ExplorerWorkspaceLabel>default_workspace</ExplorerWorkspaceLabel>
-          <ExplorerFileSystem
-            filesystem={editableFileSystem.filesystem}
-            onSelectFile={(filename) => setCurrentSelectedFile(filename)}
-          />
-        </FilesystemSection>
+        {currentSectionComponent}
         <MainTabSection>
           {!isNil(currentSelectedFile) && (
             <MainEditingBody {...editingBodyProps} />
@@ -190,6 +215,13 @@ export default function Home() {
 
         .separator {
           border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        hr.simple {
+          border: none;
+          height: 1px;
+          background-color: rgba(255, 255, 255, 0.1);
+          width: 100%;
         }
 
         * {

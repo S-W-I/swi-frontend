@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const MainEditingBodyContainer = styled.div`
-  height: calc(100% - 40px - ${(props) => props.consoleHeight}px);
+  height: calc(100% - 80px - ${(props) => props.consoleHeight}px);
 `;
 
 export const MainEditingBodyTopBar = styled.div`
@@ -13,7 +13,8 @@ export const MainEditingBodyTopBar = styled.div`
   font-family: Courier;
   line-height: 24px;
   padding-top: 6px;
-  padding-left: 64px;
+  padding-left: 12px;
+  // padding-left: 64px;
 `;
 
 export const MainEditingBodyFile = styled.div`
