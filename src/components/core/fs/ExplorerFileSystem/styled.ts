@@ -5,12 +5,22 @@ export const StyledExplorerFileSystem = styled.div`
   padding: 29.69px;
   overflow: auto;
   height: calc(100vh - 187px);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 `;
 
 export const FSAbstractItemContainer = styled.div`
   ${(props) => `
     & img {
       margin-left: ${10 * (props.depth ?? 0)}px;
+      width: 21px;
+      height: 21px;
+
+      filter: ${props.extension === "rs" ? "invert(1)" : ""};
     }
   `}
 
@@ -34,9 +44,24 @@ export const FSAbstractItemContainer = styled.div`
   padding: 6px 0;
 
   cursor: pointer;
+  position: relative;
+
+  & > * {
+    z-index: 1;
+  }
 
   & :hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    & .hoverable {
+      background-color: rgba(255, 255, 255, 0.05);
+      height: 100%;
+      position: absolute;
+      width: 100%;
+      // background: rgb(30, 32, 38);
+      z-index: 0;
+      top: 0;
+      width: calc(100% + 60px);
+      left: -30px;
+    }
   }
 `;
 
@@ -71,4 +96,3 @@ export const ExplorerWorkspaceLabel = styled.h3`
   font-size: 16px;
   line-height: 24px;
 `;
-

@@ -1,101 +1,96 @@
-import { FileSystemSnake } from 'parser/file'
-import React from 'react'
-import { MainLogConsole } from '../LogConsole'
-import { StyledMainEditingBodyLineCounter, MainEditingBodyContainer, MainEditingBodyTopBar, MainEditingBodyFile, MainEditingBodyCodeInput } from './styled';
+import { FileSystemSnake } from "parser/file";
+import React from "react";
+import { flatten } from "lodash";
+import { MainLogConsole } from "../LogConsole";
+import {
+  StyledMainEditingBodyLineCounter,
+  MainEditingBodyContainer,
+  MainEditingBodyTopBar,
+  MainEditingBodyFile,
+  MainEditingBodyCodeInput,
+  StyledMainTextArea,
+  StyledMainTextAreaLine,
+  StyledMainTextAreaWord,
+} from "./styled";
 
+class EditViewColors {
+  static Class = "violet";
+  static DeclarationKeyword = "rgb(55, 190, 181)";
+  static FnName = "rgb(17, 166, 193)";
+  static Variable = "rgb(159, 41, 70)";
+  static Commented = "gray";
+}
 
+const MainTextArea: React.FC<{ code: string }> = (props) => {
+  if (!props.code) {
+    return <div />;
+  }
 
-const mockFile = `
-use byteorder::{ByteOrder, LittleEndian};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint,
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
-    pubkey::Pubkey,
+  const splittedCode = props.code.split("\n");
+  const html = splittedCode.map((line) => {
+    if (line.slice(0, 2) === "//") {
+      return (
+        <StyledMainTextAreaLine>
+          <StyledMainTextAreaWord color={EditViewColors.Commented}>
+            {line}
+          </StyledMainTextAreaWord>
+        </StyledMainTextAreaLine>
+      );
+    }
+    const lineByWords = line.split(" ").map((word, i, words) => {
+      let color = "white";
+      const [prev, next] = [words[i - 1], words[i + 1]];
+
+      if (["impl", "pub"].includes(word)) {
+        color = EditViewColors.Variable;
+      }
+      if (["use", "crate"].includes(word)) {
+        color = EditViewColors.DeclarationKeyword;
+      }
+
+      if (["("].includes(word)) {
+        color = EditViewColors.DeclarationKeyword;
+      }
+      // '::ProgramError' pattern
+      if (word.includes("::")) {
+        // color = EditViewColors.Class
+        // const path = word.split("::");
+        // return (
+        //   path.map((pX, pI, pA) => {
+        //     if (pA.length - 1 === pI) {
+        //       return [
+        //         <StyledMainTextAreaWord color={"white"}>
+        //           ::
+        //         </StyledMainTextAreaWord>,
+        //         <StyledMainTextAreaWord color={EditViewColors.Class}>
+        //           {pX}
+        //         </StyledMainTextAreaWord>,
+        //       ];
+        //     }
+        //     <StyledMainTextAreaWord color={"white"}>
+        //       {pX}
+        //     </StyledMainTextAreaWord>;
+        //   })
+        // );
+      }
+
+      return (
+        <StyledMainTextAreaWord color={color}>{word}</StyledMainTextAreaWord>
+      );
+      // switch (word) {
+      //   case :
+      //   default:
+      //     return { __html: `<span class="unstyled">${word}</span>` }
+      // }
+      // return { __html: `<span>${word}</span>` }
+    });
+    const mappedLine = flatten(lineByWords);
+
+    return <StyledMainTextAreaLine>{mappedLine}</StyledMainTextAreaLine>;
+  });
+
+  return <StyledMainTextArea style={{}}>{html}</StyledMainTextArea>;
 };
-// use solana_sdk::system_instruction::SystemInstruction;
-use std::mem;
-
-// Declare and export the program's entrypoint
-entrypoint!(process_instruction);
-
-// Program entrypoint's implementation
-pub fn process_instruction(
-    program_id: &Pubkey, // Public key of the account the hello world program was loaded into
-    accounts: &[AccountInfo], // The account to say hello to
-    _instruction_data: &[u8], // Ignored, all helloworld instructions are hellos
-) -> ProgramResult {
-    msg!("Helloworld Rust program entrypoint");
-
-    // Iterating accounts is safer then indexing
-    let accounts_iter = &mut accounts.iter();
-
-    // Get the account to say hello to
-    let account = next_account_info(accounts_iter)?;
-
-    // The account must be owned by the program in order to modify its data
-    if account.owner != program_id {
-        msg!("Greeted account does not have the correct program id");
-        return Err(ProgramError::IncorrectProgramId);
-    }
-
-    // The data must be large enough to hold a u32 count
-    if account.try_data_len()? < mem::size_of::<u32>() {
-        msg!("Greeted account data length too small for u32");
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    // Increment and store the number of times the account has been greeted
-    let mut data = account.try_borrow_mut_data()?;
-    let mut num_greets = LittleEndian::read_u32(&data);
-    num_greets += 1;
-    LittleEndian::write_u32(&mut data[0..], num_greets);
-
-    msg!("Hello!");
-
-    Ok(())
-}
-
-// Sanity tests
-#[cfg(test)]
-mod test {
-    use super::*;
-    use solana_program::clock::Epoch;
-
-    #[test]
-    fn test_sanity() {
-        let program_id = Pubkey::default();
-        let key = Pubkey::default();
-        let mut lamports = 0;
-        let mut data = vec![0; mem::size_of::<u32>()];
-        LittleEndian::write_u32(&mut data, 0);
-
-        let owner = Pubkey::default();
-        let account = AccountInfo::new(
-            &key,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            Epoch::default(),
-        );
-        let instruction_data: Vec<u8> = Vec::new();
-
-        let accounts = vec![account];
-
-        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()), 0);
-        process_instruction(&program_id, &accounts, &instruction_data).unwrap();
-        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()), 1);
-        process_instruction(&program_id, &accounts, &instruction_data).unwrap();
-        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()), 2);
-    }
-}
-`
-
 
 const MainEditingBodyLineCounter: React.FC<{ numberOfLines: number }> = (
   props
@@ -111,33 +106,42 @@ const MainEditingBodyLineCounter: React.FC<{ numberOfLines: number }> = (
   );
 };
 
-export const MainEditingBody: React.FC<{ fileEntity: FileSystemSnake }> = (props) => {
-  // const filesystem = new FileSystemSnake([
-  //   FileSystemEntity.new_file({ name: "main.so" }),
-  //   FileSystemEntity.dir_with_entities({ name: "some_stuff" }, [
-  //     FileSystemEntity.new_file({ name: "sh.so" }),
-  //   ]),
-  // ]);
+export type EditingBodyProps = {
+  sourceCode: string;
+  filename: string;
+  onSourceCodeChange: (string) => void;
+};
 
-  // console.log({ filesystem });
+// const TEMPORARY_VIEWED_FILES_COUNT = 3
 
-  const [inputCode, setInputCode] = React.useState(mockFile)
-  const numberOfLines = inputCode.split(/\r\n|\r|\n/).length
-  console.log({ numberOfLines })
+const CONSOLE_HEIGHT = 247;
+
+export const MainEditingBody: React.FC<EditingBodyProps> = (props) => {
+  const sourceCode = props.sourceCode || "";
+  console.log({ sourceCode });
+  const numberOfLines = !sourceCode ? 0 : sourceCode.split(/\r\n|\r|\n/).length;
+  console.log({ numberOfLines, sourceCode });
 
   return (
-    <MainEditingBodyContainer>
-      {/* <MainEditingBodyTopBar>{props.fileEntity.flatten()[0].meta.name}</MainEditingBodyTopBar> */}
-      <MainEditingBodyTopBar>lib.rs</MainEditingBodyTopBar>
+    <MainEditingBodyContainer consoleHeight={CONSOLE_HEIGHT}>
+      <MainEditingBodyTopBar>{props.filename}</MainEditingBodyTopBar>
       <MainEditingBodyFile>
-        {/* <MainEditingBodyLineCounter numberOfLines={numberOfLines}/> */}
-        <MainEditingBodyCodeInput value={inputCode} initialValue={mockFile} onChange={x => {
-          // console.log({ x: x.target.value })
-          setInputCode(x.target.value)
-        }}/>
-        {/* <CurrentLineIndicator lineNumber={numberOfLines - 1}/> */}
+        {/* <MainEditingBodyCodeInput
+          value={sourceCode}
+          onChange={(x) => {
+            console.log({ x, val: x.target.value });
+            props.onSourceCodeChange(x.target.value);
+          }}
+        /> */}
+        <MainTextArea
+          code={sourceCode}
+          // onChange={(x) => {
+          //   console.log({ x, val: x.target.value });
+          //   props.onSourceCodeChange(x.target.value);
+          // }}
+        />
       </MainEditingBodyFile>
-      <MainLogConsole />
+      <MainLogConsole consoleHeight={CONSOLE_HEIGHT} />
     </MainEditingBodyContainer>
   );
 };

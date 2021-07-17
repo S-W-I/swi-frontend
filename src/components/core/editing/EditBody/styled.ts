@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const MainEditingBodyContainer = styled.div`
-  height: calc(100% - 40px - 197px);
+  height: calc(100% - 40px - ${(props) => props.consoleHeight}px);
 `;
 
 export const MainEditingBodyTopBar = styled.div`
@@ -47,7 +47,6 @@ export const StyledMainEditingBodyLineCounter = styled.div`
   }
 `;
 
-
 export const MainEditingBodyCodeInput = styled.textarea`
   background-color: rgb(17, 19, 46);
   border: none;
@@ -80,4 +79,22 @@ export const CurrentLineIndicator = styled.div`
   ${(props) => `
     top: ${24 * props.lineNumber}px;
   `}
+`;
+
+export const StyledMainTextArea = styled.div`
+  // background: red;
+  overflow: scroll;
+  font-family: monospace;
+  line-height: 19px;
+  width: 100%;
+`;
+
+export const StyledMainTextAreaLine = styled.div`
+  // background: green;
+`;
+
+export const StyledMainTextAreaWord = styled.span`
+  // background: green;
+  color: ${(props) => props.color};
+  margin-right: 8px;
 `;

@@ -1,6 +1,7 @@
 import React from "react";
 import Head from "next/head";
-import styled from "styled-components";
+import { isNil } from "lodash";
+// import styled from "styled-components";
 
 import { IDEActionSection } from "components/core/ActionSection";
 import { MainLogConsole } from "components/core/editing/LogConsole";
@@ -22,46 +23,112 @@ import {
   MainTabSection,
   ViewSelectSection,
 } from "./styled";
-import { MainEditingBody } from "components/core/editing/EditBody";
+import {
+  MainEditingBody,
+  EditingBodyProps,
+} from "components/core/editing/EditBody";
 import { MediumHeading } from "components/common/Text/styled";
 import { ExplorerFileSystem } from "components/core/fs/ExplorerFileSystem";
-import { ExplorerHeadingContainer, FileExplorerHeading, FileExplorerSubHeading, ExplorerWorkspaceLabel } from "components/core/fs/ExplorerFileSystem/styled";
+import {
+  ExplorerHeadingContainer,
+  FileExplorerHeading,
+  FileExplorerSubHeading,
+  ExplorerWorkspaceLabel,
+} from "components/core/fs/ExplorerFileSystem/styled";
 
+const sourceCodeFixture = require("fixtures/sc.json") as { sc: string };
+
+enum SectionType {
+  FileExplorers = 0,
+  Compiler,
+  Transactions,
+}
+
+type EditableFileSystem = Record<string, string>;
+
+type FileSystemState = {
+  state: EditableFileSystem;
+  filesystem: FileSystemSnake;
+};
+
+type Section = { text: string };
+const ideSectionList: Section[] = [
+  {
+    text: "File Explorers",
+  },
+  {
+    text: "Compiler",
+  },
+  {
+    text: "Transactions",
+  },
+];
 
 export default function Home() {
-  const [currentSection, setCurrentSection] = React.useState(0);
+  const [currentSection, setCurrentSection] = React.useState(
+    SectionType.Compiler
+  );
+  const [currentSelectedFile, setCurrentSelectedFile] =
+    // React.useState<FileSystemEntity | null>(null);
+    React.useState<FileSystemEntity | null>(
+      FileSystemEntity.dir_with_entities({ name: "src" }, [
+        FileSystemEntity.new_file({ name: "lib.rs" }),
+      ]).populateDepth().internal[0]
+    );
 
-  type Section = { text: string };
-  const ideSectionList: Section[] = [
-    {
-      text: "File Explorers",
-    },
-    {
-      text: "Compiler",
-    },
-    {
-      text: "Transactions",
-    },
-  ];
+  console.log({ currentSelectedFile });
 
-  const filesystem = new FileSystemSnake([
-    // FileSystemEntity.new_file({ name: "file.so" }),
-    FileSystemEntity.dir_with_entities({ name: "src" }, [
-      FileSystemEntity.new_file({ name: "lib.rs" }),
-    ]).populateDepth(),
-    FileSystemEntity.dir_with_entities({ name: "tests" }, [
-      FileSystemEntity.new_file({ name: "lib.rs" }),
-    ]).populateDepth(),
-    FileSystemEntity.new_file({ name: "Cargo.lock" }),
-    FileSystemEntity.new_file({ name: "Cargo.toml" }),
-    FileSystemEntity.new_file({ name: "Xargo.toml" }),
-  ])
+  const [sourceCodeState, setSourceCodeState] =
+    React.useState<EditableFileSystem>({
+      ["src/lib.rs"]: sourceCodeFixture.sc,
+      ["Cargo.toml"]: "this is Cargo.toml",
+      ["Xargo.toml"]: "this is Xargo.toml",
+      ["Cargo.lock"]: "this is Cargo.lock",
+    });
 
+  const editableFileSystem: FileSystemState = {
+    state: sourceCodeState,
+    filesystem: new FileSystemSnake([
+      // FileSystemEntity.new_file({ name: "file.so" }),
+      FileSystemEntity.dir_with_entities({ name: "src" }, [
+        FileSystemEntity.dir_with_entities({ name: "project" }, [
+          FileSystemEntity.new_file({ name: "error.rs" }),
+          FileSystemEntity.new_file({ name: "instruction.rs" }),
+          FileSystemEntity.new_file({ name: "mod.rs" }),
+          FileSystemEntity.new_file({ name: "processor.rs" }),
+          FileSystemEntity.new_file({ name: "state.rs" }),
+        ]),
+        FileSystemEntity.new_file({ name: "lib.rs" }),
+        FileSystemEntity.new_file({ name: "entrypoint.rs" }),
+      ]).populateDepth(),
+      FileSystemEntity.new_file({ name: "Cargo.lock" }),
+      FileSystemEntity.new_file({ name: "Cargo.toml" }),
+      FileSystemEntity.new_file({ name: "Xargo.toml" }),
+    ]),
+  };
+
+  const currentEntityFilePath = currentSelectedFile?.currentEntityFilePath;
+  console.log({ currentEntityFilePath });
+
+  const editingBodyProps: EditingBodyProps = {
+    sourceCode: sourceCodeState[currentEntityFilePath],
+    filename: currentSelectedFile?.meta.name,
+    onSourceCodeChange: (newCode) => {
+      // sourceCodeState[currentSelectedFile] = newCode;
+      const newState = Object.assign({}, sourceCodeState, {
+        [currentEntityFilePath]: newCode,
+      });
+      console.log({ newState });
+
+      setSourceCodeState(newState);
+    },
+  };
+  console.log({ filesystem: editableFileSystem.filesystem, editingBodyProps });
 
   return (
     <div className="container">
       <Head>
-        <title>Selenium | Develop</title>
+        <title>SWI | Solana Web Interface</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -71,7 +138,7 @@ export default function Home() {
         <ViewSelectSection className="separator">
           <LogoContainer>
             <img src="/app/selenium.svg" />
-            <MediumHeading>Selenium</MediumHeading>
+            <MediumHeading>SWI</MediumHeading>
           </LogoContainer>
 
           <IDEActionsFlex>
@@ -79,7 +146,7 @@ export default function Home() {
               <IDEActionSection
                 key={x.text}
                 checked={i === currentSection}
-                onSelect={() => (i)}
+                onSelect={() => i}
               >
                 {x.text}
               </IDEActionSection>
@@ -93,10 +160,15 @@ export default function Home() {
             <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading>
           </ExplorerHeadingContainer>
           <ExplorerWorkspaceLabel>default_workspace</ExplorerWorkspaceLabel>
-          <ExplorerFileSystem filesystem={filesystem} />
+          <ExplorerFileSystem
+            filesystem={editableFileSystem.filesystem}
+            onSelectFile={(filename) => setCurrentSelectedFile(filename)}
+          />
         </FilesystemSection>
         <MainTabSection>
-          <MainEditingBody fileEntity={filesystem}/>
+          {!isNil(currentSelectedFile) && (
+            <MainEditingBody {...editingBodyProps} />
+          )}
         </MainTabSection>
       </HomeContainer>
       <Footer />
