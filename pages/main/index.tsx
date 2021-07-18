@@ -30,11 +30,14 @@ import {
 
 import { MediumHeading } from "components/common/Text/styled";
 
-import { Checkbox } from "components/common/Checkbox";
-import { SelectList } from "components/common/SelectList";
+// import { Checkbox } from "components/common/Checkbox";
+// import { SelectList } from "components/common/SelectList";
 
 import { ExplorerFileSystem } from "components/core/fs/ExplorerFileSystem";
-import { CompilerSection } from "components/core/compiler/CompilerSection";
+import {
+  CompilerSection,
+  CompilerProps,
+} from "components/core/compiler/CompilerSection";
 
 import {
   ExplorerHeadingContainer,
@@ -42,6 +45,7 @@ import {
   FileExplorerSubHeading,
   ExplorerWorkspaceLabel,
 } from "components/core/fs/ExplorerFileSystem/styled";
+import { IDEBackendService, IDEFileEntity } from "services/fs";
 
 const sourceCodeFixture = require("fixtures/sc.json") as { sc: string };
 
@@ -66,9 +70,9 @@ const ideSectionList: Section[] = [
   {
     text: "Compiler",
   },
-  {
-    text: "Transactions",
-  },
+  // {
+  //   text: "Transactions",
+  // },
 ];
 
 export default function Home() {
@@ -94,33 +98,82 @@ export default function Home() {
       ["Cargo.lock"]: "this is Cargo.lock",
     });
 
+  const [filesystemStructure, setFileSystemStructure] =
+    React.useState<FileSystemSnake | null>(null);
+
   const editableFileSystem: FileSystemState = {
     state: sourceCodeState,
-    filesystem: new FileSystemSnake([
-      // FileSystemEntity.new_file({ name: "file.so" }),
-      FileSystemEntity.dir_with_entities({ name: "src" }, [
-        FileSystemEntity.dir_with_entities({ name: "project" }, [
-          FileSystemEntity.new_file({ name: "error.rs" }),
-          FileSystemEntity.new_file({ name: "instruction.rs" }),
-          FileSystemEntity.new_file({ name: "mod.rs" }),
-          FileSystemEntity.new_file({ name: "processor.rs" }),
-          FileSystemEntity.new_file({ name: "state.rs" }),
-        ]),
-        FileSystemEntity.new_file({ name: "lib.rs" }),
-        FileSystemEntity.new_file({ name: "entrypoint.rs" }),
-      ]).populateDepth(),
-      FileSystemEntity.new_file({ name: "Cargo.lock" }),
-      FileSystemEntity.new_file({ name: "Cargo.toml" }),
-      FileSystemEntity.new_file({ name: "Xargo.toml" }),
-    ]),
+    filesystem: filesystemStructure,
   };
+
+  const ideService = new IDEBackendService({
+    endpoint: "http://localhost:8081",
+  });
+
+  React.useEffect(() => {
+    // const filesystem = new FileSystemSnake([
+    //   // FileSystemEntity.new_file({ name: "file.so" }),
+    //   FileSystemEntity.dir_with_entities({ name: "src" }, [
+    //     FileSystemEntity.dir_with_entities({ name: "project" }, [
+    //       FileSystemEntity.new_file({ name: "error.rs" }),
+    //       FileSystemEntity.new_file({ name: "instruction.rs" }),
+    //       FileSystemEntity.new_file({ name: "mod.rs" }),
+    //       FileSystemEntity.new_file({ name: "processor.rs" }),
+    //       FileSystemEntity.new_file({ name: "state.rs" }),
+    //     ]),
+    //     FileSystemEntity.new_file({ name: "lib.rs" }),
+    //     FileSystemEntity.new_file({ name: "entrypoint.rs" }),
+    //   ]).populateDepth(),
+    //   FileSystemEntity.new_file({ name: "Cargo.lock" }),
+    //   FileSystemEntity.new_file({ name: "Cargo.toml" }),
+    //   FileSystemEntity.new_file({ name: "Xargo.toml" }),
+    // ]);
+
+    (async () => {
+      const filesystem = await ideService.fetchData();
+      const result: FileSystemEntity[] = [];
+
+      const populate = (
+        inputFs: IDEFileEntity[] | null,
+        levelCache: FileSystemEntity[]
+      ) => {
+        if (isNil(inputFs)) {
+          return;
+        }
+
+        for (let i = 0; i < inputFs.length; i++) {
+          const entity = inputFs[i];
+
+          if (entity.IsFile) {
+            levelCache.push(FileSystemEntity.new_file({ name: entity.Name }));
+          } else {
+            const thisCache = [];
+
+            populate(entity.Children, thisCache);
+
+            levelCache.push(
+              FileSystemEntity.dir_with_entities(
+                { name: entity.Name },
+                thisCache
+              ).populateDepth()
+            );
+          }
+        }
+      };
+      populate(filesystem.Children, result);
+      console.log(result);
+
+      setFileSystemStructure(new FileSystemSnake(result));
+    })();
+  }, []);
 
   const currentEntityFilePath = currentSelectedFile?.currentEntityFilePath;
   console.log({ currentEntityFilePath });
 
   const editingBodyProps: EditingBodyProps = {
     sourceCode: sourceCodeState[currentEntityFilePath],
-    filename: currentSelectedFile?.meta.name,
+    // filename: currentSelectedFile?.meta.name,
+    filename: currentSelectedFile?.currentEntityFilePath,
     onSourceCodeChange: (newCode) => {
       // sourceCodeState[currentSelectedFile] = newCode;
       const newState = Object.assign({}, sourceCodeState, {
@@ -132,6 +185,10 @@ export default function Home() {
     },
   };
   console.log({ filesystem: editableFileSystem.filesystem, editingBodyProps });
+
+  const compilerProps: CompilerProps = {
+    currentFile: currentSelectedFile,
+  };
 
   const sectionsMapping = {
     [SectionType.FileExplorers]: (
@@ -153,7 +210,7 @@ export default function Home() {
           <FileExplorerHeading>Solana Compiler</FileExplorerHeading>
           {/* <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading> */}
 
-          <CompilerSection />
+          <CompilerSection {...compilerProps} />
         </ExplorerHeadingContainer>
       </FilesystemSection>
     ),
@@ -181,7 +238,7 @@ export default function Home() {
               <IDEActionSection
                 key={x.text}
                 checked={i === currentSection}
-                onSelect={() => i}
+                onSelect={() => i >= 0 && i <= 1 && setCurrentSection(i)}
               >
                 {x.text}
               </IDEActionSection>

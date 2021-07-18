@@ -1,3 +1,5 @@
+import { isNil } from "lodash"
+
 import { Checkbox } from "components/common/Checkbox";
 import { SelectList } from "components/common/SelectList";
 import { Button } from "components/common/Button";
@@ -5,9 +7,21 @@ import { Button } from "components/common/Button";
 import React from "react";
 
 import { StyledCompilerSection, MiscOptionsContainer } from "./styled";
+import { FileSystemEntity } from "parser/file";
 
-export const CompilerSection: React.FC<{}> = (props) => {
+export type CompilerProps = {
+  currentFile: FileSystemEntity | null;
+};
+
+export const CompilerSection: React.FC<CompilerProps> = (props) => {
   const [nightlyEnabled, triggerNightly] = React.useState(false);
+  
+  const buttonText = "Compile"
+  const onDownload = () => {}
+  // const buttonText = isNil(props.currentFile) ? 'Compile {"<no file selected>"}' : (
+  //   isNil(props.currentFile.extension) ? "Cannot compile" :
+  //   // `Compile ${props.currentFile}`
+  // )
 
   return (
     <StyledCompilerSection>
@@ -49,7 +63,7 @@ export const CompilerSection: React.FC<{}> = (props) => {
         />
       </MiscOptionsContainer>
       <hr className="simple" />
-      <Button>Compile {"<no file selected>"}</Button>
+      <Button onClick={onDownload}>{buttonText}</Button>
     </StyledCompilerSection>
   );
 };

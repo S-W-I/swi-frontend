@@ -124,6 +124,15 @@ export class FileSystemEntity {
 
     return path;
   }
+
+  get extension(): string | null {
+    if (this.is_dir()) {
+      return null;
+    }
+
+    const spl = this.meta.name.split(".");
+    return spl[spl.length - 1];
+  }
 }
 
 export class FileSystemSnake {

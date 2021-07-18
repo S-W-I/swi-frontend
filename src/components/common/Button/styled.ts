@@ -17,4 +17,6 @@ export const StyledButton = styled.button`
   text-align: center;
   color: white;
   border-radius: 3px;
+
+  cursor: pointer;
 `;
