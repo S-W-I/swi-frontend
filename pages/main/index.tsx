@@ -1,5 +1,9 @@
 import React from "react";
 import Head from "next/head";
+import { Keypair } from "@solana/web3.js";
+import jwt from "jsonwebtoken";
+import base58 from "bs58";
+
 import { isNil } from "lodash";
 // import styled from "styled-components";
 
@@ -46,6 +50,7 @@ import {
   ExplorerWorkspaceLabel,
 } from "components/core/fs/ExplorerFileSystem/styled";
 import { IDEBackendService, IDEFileEntity } from "services/fs";
+import { LocalStorageManager, useLocalStorage } from "hooks/localStorage";
 
 const sourceCodeFixture = require("fixtures/sc.json") as { sc: string };
 
@@ -75,6 +80,29 @@ const ideSectionList: Section[] = [
   // },
 ];
 
+function useKeypair() {
+  const [lsValue, setLsValue] = useLocalStorage(
+    LocalStorageManager.PK_KEY,
+    null
+  );
+
+  React.useEffect(() => {
+    if (lsValue === null) {
+      const kp = new Keypair();
+
+      const encodedPrivateKey = base58.encode(kp.secretKey);
+      const data = jwt.sign("some shit", encodedPrivateKey);
+
+      console.log({ kp, encodedPrivateKey, data });
+
+      setLsValue(encodedPrivateKey);
+      console.log({ lsValueCreated: lsValue })
+    } else {
+      console.log({ lsValueMemorized: lsValue });
+    }
+  }, [lsValue]);
+}
+
 export default function Home() {
   const [currentSection, setCurrentSection] = React.useState(
     // SectionType.FileExplorers
@@ -92,7 +120,7 @@ export default function Home() {
 
   const [sourceCodeState, setSourceCodeState] =
     React.useState<EditableFileSystem>({
-      ["src/lib.rs"]: sourceCodeFixture.sc,
+      ["lib.rs"]: sourceCodeFixture.sc,
       ["Cargo.toml"]: "this is Cargo.toml",
       ["Xargo.toml"]: "this is Xargo.toml",
       ["Cargo.lock"]: "this is Cargo.lock",
@@ -110,25 +138,11 @@ export default function Home() {
     endpoint: "http://localhost:8081",
   });
 
-  React.useEffect(() => {
-    // const filesystem = new FileSystemSnake([
-    //   // FileSystemEntity.new_file({ name: "file.so" }),
-    //   FileSystemEntity.dir_with_entities({ name: "src" }, [
-    //     FileSystemEntity.dir_with_entities({ name: "project" }, [
-    //       FileSystemEntity.new_file({ name: "error.rs" }),
-    //       FileSystemEntity.new_file({ name: "instruction.rs" }),
-    //       FileSystemEntity.new_file({ name: "mod.rs" }),
-    //       FileSystemEntity.new_file({ name: "processor.rs" }),
-    //       FileSystemEntity.new_file({ name: "state.rs" }),
-    //     ]),
-    //     FileSystemEntity.new_file({ name: "lib.rs" }),
-    //     FileSystemEntity.new_file({ name: "entrypoint.rs" }),
-    //   ]).populateDepth(),
-    //   FileSystemEntity.new_file({ name: "Cargo.lock" }),
-    //   FileSystemEntity.new_file({ name: "Cargo.toml" }),
-    //   FileSystemEntity.new_file({ name: "Xargo.toml" }),
-    // ]);
+  useKeypair();
 
+  // const token = jwt.new
+
+  React.useEffect(() => {
     (async () => {
       const filesystem = await ideService.fetchData();
       const result: FileSystemEntity[] = [];
