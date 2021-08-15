@@ -1,14 +1,8 @@
 /* eslint-disable */
 import { util, configure, Writer, Reader } from "protobufjs/minimal";
 import * as Long from "long";
-import { Any } from "../google/protobuf/any";
 
 export const protobufPackage = "";
-
-export interface Response {
-  message: string;
-  result: Any | undefined;
-}
 
 export interface DropResponseMessage {
   message: string;
@@ -35,79 +29,6 @@ export interface CompileSessionBody {
 export interface DownloadCompiledSessionBody {
   session_id: string;
 }
-
-const baseResponse: object = { message: "" };
-
-export const Response = {
-  encode(message: Response, writer: Writer = Writer.create()): Writer {
-    if (message.message !== "") {
-      writer.uint32(10).string(message.message);
-    }
-    if (message.result !== undefined) {
-      Any.encode(message.result, writer.uint32(18).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: Reader | Uint8Array, length?: number): Response {
-    const reader = input instanceof Reader ? input : new Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseResponse } as Response;
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.message = reader.string();
-          break;
-        case 2:
-          message.result = Any.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Response {
-    const message = { ...baseResponse } as Response;
-    if (object.message !== undefined && object.message !== null) {
-      message.message = String(object.message);
-    } else {
-      message.message = "";
-    }
-    if (object.result !== undefined && object.result !== null) {
-      message.result = Any.fromJSON(object.result);
-    } else {
-      message.result = undefined;
-    }
-    return message;
-  },
-
-  toJSON(message: Response): unknown {
-    const obj: any = {};
-    message.message !== undefined && (obj.message = message.message);
-    message.result !== undefined &&
-      (obj.result = message.result ? Any.toJSON(message.result) : undefined);
-    return obj;
-  },
-
-  fromPartial(object: DeepPartial<Response>): Response {
-    const message = { ...baseResponse } as Response;
-    if (object.message !== undefined && object.message !== null) {
-      message.message = object.message;
-    } else {
-      message.message = "";
-    }
-    if (object.result !== undefined && object.result !== null) {
-      message.result = Any.fromPartial(object.result);
-    } else {
-      message.result = undefined;
-    }
-    return message;
-  },
-};
 
 const baseDropResponseMessage: object = { message: "" };
 

@@ -37,9 +37,15 @@ export const LogoContainer = styled.div`
   align-items: center;
 
   & img {
-    width: 140px;
-    padding-right: 16px;
-    margin-right: -33px;
+    width: 82px;
+  }
+
+  & > :nth-child(1) {
+    margin-left: auto;
+  }
+  & > :nth-child(2) {
+    margin-right: auto;
+    margin-left: 22px;
   }
 `;
 

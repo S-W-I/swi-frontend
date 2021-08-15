@@ -1,11 +1,10 @@
 import React from "react";
 import Head from "next/head";
-import { Keypair } from "@solana/web3.js";
-import jwt from "jsonwebtoken";
-import base58 from "bs58";
+
+import { Subject } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 
 import { isNil } from "lodash";
-// import styled from "styled-components";
 
 import { IDEActionSection } from "components/core/ActionSection";
 import { MainLogConsole } from "components/core/editing/LogConsole";
@@ -51,7 +50,12 @@ import {
 } from "components/core/fs/ExplorerFileSystem/styled";
 import { SessionClient } from "services/fs";
 import { LocalStorageManager, useLocalStorage } from "hooks/localStorage";
-import { SessionLegacyNode, SessionTree } from "protobuf/session";
+import {
+  CompilationInfo,
+  SessionLegacyNode,
+  SessionTree,
+} from "protobuf/session";
+import { UpdateSessionBody } from "protobuf/transport";
 
 const sourceCodeFixture = require("fixtures/sc.json") as { sc: string };
 
@@ -81,32 +85,56 @@ const ideSectionList: Section[] = [
   // },
 ];
 
-// function useKeypair() {
-// const [lsValue, setLsValue] = useLocalStorage(
-//   LocalStorageManager.PK_KEY,
-//   null
-// );
-
 const sessionClient = new SessionClient({ endpoint: "http://localhost:8081" });
 
-//   React.useEffect(() => {
-//     if (lsValue === null) {
-//       const kp = new Keypair();
-
-//       const encodedPrivateKey = base58.encode(kp.secretKey);
-//       const data = jwt.sign("some shit", encodedPrivateKey);
-
-//       console.log({ kp, encodedPrivateKey, data });
-
-//       setLsValue(encodedPrivateKey);
-//       console.log({ lsValueCreated: lsValue });
-//     } else {
-//       console.log({ lsValueMemorized: lsValue });
-//     }
-//   }, [lsValue]);
-// }
-
 export default function Home() {
+  const [compileInfo, setCompileInfo] = React.useState<CompilationInfo | null>(
+    null
+  );
+  const [compileCodeSubject] = React.useState(new Subject<null>());
+
+  console.log({ compileInfo });
+
+  React.useEffect(() => {
+    const subscription = compileCodeSubject
+      .pipe(debounceTime(300))
+      .subscribe(async () => {
+        const compilationInfo = await sessionClient.compileSessionCode(
+          sessionId
+        );
+
+        setCompileInfo(compilationInfo);
+      });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const [codeUpdateSubject] = React.useState(
+    new Subject<{ [x: string]: string }>()
+  );
+  React.useEffect(() => {
+    const subscription = codeUpdateSubject
+      .pipe(debounceTime(300))
+      .subscribe(async (updateEntry) => {
+        const firstKey = Object.keys(updateEntry)[0];
+        const payload = Object.assign({}, updateEntry);
+
+        const buff = Buffer.from(payload[firstKey]);
+        const base64data = buff.toString("base64");
+
+        payload[firstKey] = base64data;
+
+        await sessionClient.updateSessionCode(
+          UpdateSessionBody.fromJSON({
+            session_id: sessionId,
+            tree: payload,
+          })
+        );
+      });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const [currentSection, setCurrentSection] = React.useState(
     SectionType.FileExplorers
     // SectionType.Compiler
@@ -131,43 +159,26 @@ export default function Home() {
       );
 
       setSessionTree(session);
-      console.log({ sessionLegacy });
       setSessionLegacyTree(sessionLegacy);
     })();
   }, []);
-
-  console.log({ currentSessionTree });
 
   React.useEffect(() => {
     (async () => {
       if (sessionId === null) {
         const freshSessionId = await sessionClient.initNewSession();
-        console.log({ session: freshSessionId });
         setSessionValue(freshSessionId.session_id);
       }
     })();
   }, [sessionId]);
 
-  console.log({ sessionId });
-
   const [currentSelectedFile, setCurrentSelectedFile] =
     React.useState<FileSystemEntity | null>(null);
-
-  console.log({ currentSelectedFile });
-
-  // const [sourceCodeState, setSourceCodeState] =
-  //   React.useState<EditableFileSystem>({
-  //     ["lib.rs"]: sourceCodeFixture.sc,
-  //     ["Cargo.toml"]: "this is Cargo.toml",
-  //     ["Xargo.toml"]: "this is Xargo.toml",
-  //     ["Cargo.lock"]: "this is Cargo.lock",
-  //   });
 
   const [sourceCodeState, setSourceCodeState] =
     React.useState<EditableFileSystem>({});
 
   React.useEffect(() => {
-    // for (let i = 0; i < currentSessionTree.file_paths.length; i++)
     if (isNil(currentSessionTree)) {
       return;
     }
@@ -176,13 +187,10 @@ export default function Home() {
     for (let i = 0; i < keys.length; i++) {
       const splittedPath = keys[i].split("/");
       const path = splittedPath.slice(1).join("/");
-      console.log({ splittedPath, path });
 
       const value = currentSessionTree.file_paths[keys[i]];
       const buff = Buffer.from(value, "base64");
       const text = buff.toString("utf8");
-
-      console.log({ path, value, text });
 
       const newSourceCode = sourceCodeState;
       newSourceCode[path] = text;
@@ -236,14 +244,12 @@ export default function Home() {
         }
       };
       populate(currentSessionLegacyTree, result);
-      console.log({ consistenTreeResult: result });
 
       setFileSystemStructure(new FileSystemSnake(result));
     })();
   }, [currentSessionLegacyTree]);
 
   const currentEntityFilePath = currentSelectedFile?.currentEntityFilePath;
-  console.log({ currentEntityFilePath, currentSelectedFile });
 
   const editingBodyProps: EditingBodyProps = {
     sourceCode: sourceCodeState[currentEntityFilePath],
@@ -252,15 +258,22 @@ export default function Home() {
       const newState = Object.assign({}, sourceCodeState, {
         [currentEntityFilePath]: newCode,
       });
-      console.log({ newState });
 
       setSourceCodeState(newState);
+
+      codeUpdateSubject.next({
+        [`${sessionId}/${currentEntityFilePath}`]: newCode,
+      });
+      // await sessionClient.
     },
   };
-  console.log({ sourceCode: editingBodyProps.sourceCode, filesystem: editableFileSystem.filesystem });
 
   const compilerProps: CompilerProps = {
     currentFile: currentSelectedFile,
+    compileInfo,
+    onCompile: () => {
+      compileCodeSubject.next(null);
+    },
   };
 
   const sectionsMapping = {
@@ -304,7 +317,7 @@ export default function Home() {
 
         <ViewSelectSection className="separator">
           <LogoContainer>
-            <img src="/app/selenium.svg" />
+            <img src="/app/logo.svg" />
             <MediumHeading>SWI</MediumHeading>
           </LogoContainer>
 

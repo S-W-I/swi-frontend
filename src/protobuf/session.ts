@@ -31,6 +31,7 @@ export interface SessionLegacyNode {
 
 export interface SessionTree {
   file_paths: { [key: string]: string };
+  files_order: string[];
 }
 
 export interface SessionTree_FilePathsEntry {
@@ -362,7 +363,7 @@ export const SessionLegacyNode = {
   },
 };
 
-const baseSessionTree: object = {};
+const baseSessionTree: object = { files_order: "" };
 
 export const SessionTree = {
   encode(message: SessionTree, writer: Writer = Writer.create()): Writer {
@@ -372,6 +373,9 @@ export const SessionTree = {
         writer.uint32(10).fork()
       ).ldelim();
     });
+    for (const v of message.files_order) {
+      writer.uint32(18).string(v!);
+    }
     return writer;
   },
 
@@ -380,6 +384,7 @@ export const SessionTree = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseSessionTree } as SessionTree;
     message.file_paths = {};
+    message.files_order = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -392,6 +397,9 @@ export const SessionTree = {
             message.file_paths[entry1.key] = entry1.value;
           }
           break;
+        case 2:
+          message.files_order.push(reader.string());
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -403,10 +411,16 @@ export const SessionTree = {
   fromJSON(object: any): SessionTree {
     const message = { ...baseSessionTree } as SessionTree;
     message.file_paths = {};
+    message.files_order = [];
     if (object.file_paths !== undefined && object.file_paths !== null) {
       Object.entries(object.file_paths).forEach(([key, value]) => {
         message.file_paths[key] = String(value);
       });
+    }
+    if (object.files_order !== undefined && object.files_order !== null) {
+      for (const e of object.files_order) {
+        message.files_order.push(String(e));
+      }
     }
     return message;
   },
@@ -419,18 +433,29 @@ export const SessionTree = {
         obj.file_paths[k] = v;
       });
     }
+    if (message.files_order) {
+      obj.files_order = message.files_order.map((e) => e);
+    } else {
+      obj.files_order = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<SessionTree>): SessionTree {
     const message = { ...baseSessionTree } as SessionTree;
     message.file_paths = {};
+    message.files_order = [];
     if (object.file_paths !== undefined && object.file_paths !== null) {
       Object.entries(object.file_paths).forEach(([key, value]) => {
         if (value !== undefined) {
           message.file_paths[key] = String(value);
         }
       });
+    }
+    if (object.files_order !== undefined && object.files_order !== null) {
+      for (const e of object.files_order) {
+        message.files_order.push(e);
+      }
     }
     return message;
   },

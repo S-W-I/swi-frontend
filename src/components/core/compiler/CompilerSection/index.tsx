@@ -6,37 +6,51 @@ import { Button } from "components/common/Button";
 
 import React from "react";
 
-import { StyledCompilerSection, MiscOptionsContainer } from "./styled";
+import {
+  StyledCompilerSection,
+  MiscOptionsContainer,
+  StyledErrorLog,
+} from "./styled";
 import { FileSystemEntity } from "parser/file";
 
+import { CompilationInfo } from "protobuf/session";
+
 export type CompilerProps = {
+  buttonName: string;
   currentFile: FileSystemEntity | null;
+  compileInfo: CompilationInfo | null;
+  onCompile: () => void;
+  onDownload: () => void;
+};
+
+export const ErrorLog: React.FC<{ info: CompilationInfo }> = (props) => {
+  if (!props.info?.compile_error) {
+    return null;
+  }
+
+  return (
+    <StyledErrorLog>
+      <span>{props.info.message}</span>
+    </StyledErrorLog>
+  );
 };
 
 export const CompilerSection: React.FC<CompilerProps> = (props) => {
-  const [nightlyEnabled, triggerNightly] = React.useState(false);
-
-  const buttonText = "Compile";
-  const onDownload = () => {};
-  // const buttonText = isNil(props.currentFile) ? 'Compile {"<no file selected>"}' : (
-  //   isNil(props.currentFile.extension) ? "Cannot compile" :
-  //   // `Compile ${props.currentFile}`
-  // )
-
   return (
     <StyledCompilerSection>
       <SelectList
         labelProps={{ value: "Compiler" }}
         values={[
-          { name: "0.8.1", value: "0.8.1" },
-          { name: "0.8.5", value: "0.8.5" },
+          { name: "1.6.9", value: "1.6.9" },
+          // { name: "0.8.1", value: "0.8.1" },
+          // { name: "0.8.5", value: "0.8.5" },
         ]}
       />
-      <Checkbox
+      {/* <Checkbox
         label="Include nightly builds"
         checked={nightlyEnabled}
         onCheck={triggerNightly}
-      />
+      /> */}
       <SelectList
         labelProps={{ value: "Language" }}
         values={[{ name: "solana", value: "Solana" }]}
@@ -46,7 +60,7 @@ export const CompilerSection: React.FC<CompilerProps> = (props) => {
         values={[{ name: "bpf", value: "BPF Loader 3" }]}
       />
       <MiscOptionsContainer>
-        <Checkbox
+        {/* <Checkbox
           label="Auto compile"
           checked={nightlyEnabled}
           onCheck={triggerNightly}
@@ -60,10 +74,23 @@ export const CompilerSection: React.FC<CompilerProps> = (props) => {
           label="Hide warnings"
           checked={nightlyEnabled}
           onCheck={triggerNightly}
-        />
+        /> */}
       </MiscOptionsContainer>
+      <Button onClick={props.onCompile}>Compile</Button>
       <hr className="simple" />
-      <Button onClick={onDownload}>{buttonText}</Button>
+
+      {props.compileInfo?.compile_error ? (
+        <ErrorLog info={props.compileInfo} />
+      ) : (
+        !isNil(props.compileInfo) && (
+          <Button
+            onClick={props.onDownload}
+            style={{ background: "rgb(46,4,202)" }}
+          >
+            Download
+          </Button>
+        )
+      )}
     </StyledCompilerSection>
   );
 };
