@@ -1,7 +1,1 @@
-
-
-
-
-export default function IDEActionSection() {
-
-}
+export default function IDEActionSection() {}

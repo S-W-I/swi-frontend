@@ -1,11 +1,7 @@
 import styled from "styled-components";
 
-
 export class ApplicationColor {
-
-  static MAIN_BG = 'rgba(18, 20, 28, 1)';
-
-
+  static MAIN_BG = "rgba(18, 20, 28, 1)";
 }
 
 export const HomeContainer = styled.div`
@@ -17,25 +13,21 @@ export const HomeContainer = styled.div`
   height: 100%;
 `;
 
-
-export const Footer = styled.footer`
-
-`
-
+export const Footer = styled.footer``;
 
 export const ViewSelectSection = styled.div`
   width: 297px;
   height: 100%;
-`
+`;
 export const FilesystemSection = styled.div`
   width: 268px;
   height: 100%;
-`
+`;
 
 export const MainTabSection = styled.div`
   width: calc(100vw - 565px);
   height: 100vh;
-`
+`;
 
 export const LogoContainer = styled.div`
   padding: 32px 28px;
@@ -49,7 +41,7 @@ export const LogoContainer = styled.div`
     padding-right: 16px;
     margin-right: -33px;
   }
-`
+`;
 
 export const IDEActionsFlex = styled.div`
   display: flex;
@@ -64,4 +56,4 @@ export const IDEActionsFlex = styled.div`
   & button:not(:first-child) {
     margin-top: 16px;
   }
-`
+`;

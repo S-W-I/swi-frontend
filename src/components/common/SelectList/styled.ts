@@ -44,7 +44,6 @@ export const StyledEmptyList = styled.div`
     display: block;
     margin-top: 4px;
   }
-
 `;
 
 export const StyledSelectLabel = styled.label`

@@ -38,7 +38,6 @@ export function useLocalStorage<T>(
   return [storedValue, setValue];
 }
 
-
 export class LocalStorageManager {
-  static PK_KEY = "swi_ide_pk"
+  static PK_KEY = "swi_ide_pk";
 }

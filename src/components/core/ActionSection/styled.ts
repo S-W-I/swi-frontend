@@ -1,10 +1,9 @@
-import styled from 'styled-components'
-import { ButtonState } from './index'
-
+import styled from "styled-components";
+import { ButtonState } from "./index";
 
 class ButtonColor {
   static checked = "rgba(54, 79, 191, 1)";
-  static unchecked = "rgba(89, 90, 96, 1)"
+  static unchecked = "rgba(89, 90, 96, 1)";
 }
 
 export const IDEStyledActionButton = styled.button`
@@ -18,7 +17,7 @@ export const IDEStyledActionButton = styled.button`
   font-size: 16px;
   font-weight: bold;
   border: none;
-  
+
   font-family: Poppins;
   font-style: normal;
   font-weight: normal;
@@ -27,13 +26,15 @@ export const IDEStyledActionButton = styled.button`
 
   cursor: pointer;
 
-  ${props => props.checked ? `
+  ${(props) =>
+    props.checked
+      ? `
     color: ${ButtonColor.checked};
     background: rgba(12, 14, 18, 1);
     border-radius: 12px;
-    ` : `
+    `
+      : `
     color: ${ButtonColor.unchecked};
     background: transparent;
   `}
-
-`
+`;
