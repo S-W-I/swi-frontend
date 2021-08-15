@@ -49,8 +49,9 @@ import {
   FileExplorerSubHeading,
   ExplorerWorkspaceLabel,
 } from "components/core/fs/ExplorerFileSystem/styled";
-import { IDEBackendService, IDEFileEntity } from "services/fs";
+import { SessionClient } from "services/fs";
 import { LocalStorageManager, useLocalStorage } from "hooks/localStorage";
+import { SessionLegacyNode, SessionTree } from "protobuf/session";
 
 const sourceCodeFixture = require("fixtures/sc.json") as { sc: string };
 
@@ -80,134 +81,174 @@ const ideSectionList: Section[] = [
   // },
 ];
 
-function useKeypair() {
-  const [lsValue, setLsValue] = useLocalStorage(
-    LocalStorageManager.PK_KEY,
-    null
-  );
+// function useKeypair() {
+// const [lsValue, setLsValue] = useLocalStorage(
+//   LocalStorageManager.PK_KEY,
+//   null
+// );
 
-  React.useEffect(() => {
-    if (lsValue === null) {
-      const kp = new Keypair();
+const sessionClient = new SessionClient({ endpoint: "http://localhost:8081" });
 
-      const encodedPrivateKey = base58.encode(kp.secretKey);
-      const data = jwt.sign("some shit", encodedPrivateKey);
+//   React.useEffect(() => {
+//     if (lsValue === null) {
+//       const kp = new Keypair();
 
-      console.log({ kp, encodedPrivateKey, data });
+//       const encodedPrivateKey = base58.encode(kp.secretKey);
+//       const data = jwt.sign("some shit", encodedPrivateKey);
 
-      setLsValue(encodedPrivateKey);
-      console.log({ lsValueCreated: lsValue });
-    } else {
-      console.log({ lsValueMemorized: lsValue });
-    }
-  }, [lsValue]);
-}
+//       console.log({ kp, encodedPrivateKey, data });
+
+//       setLsValue(encodedPrivateKey);
+//       console.log({ lsValueCreated: lsValue });
+//     } else {
+//       console.log({ lsValueMemorized: lsValue });
+//     }
+//   }, [lsValue]);
+// }
 
 export default function Home() {
   const [currentSection, setCurrentSection] = React.useState(
     SectionType.FileExplorers
     // SectionType.Compiler
   );
+
+  const [currentSessionTree, setSessionTree] =
+    React.useState<SessionTree | null>(null);
+  const [currentSessionLegacyTree, setSessionLegacyTree] = React.useState<
+    SessionLegacyNode[] | null
+  >(null);
+
+  const [sessionId, setSessionValue] = useLocalStorage(
+    LocalStorageManager.SESSION_ID,
+    null
+  );
+
+  React.useEffect(() => {
+    (async () => {
+      const session = await sessionClient.fetchSessionCodeTree(sessionId);
+      const sessionLegacy = await sessionClient.fetchSessionCodeLegacyTree(
+        sessionId
+      );
+
+      setSessionTree(session);
+      console.log({ sessionLegacy });
+      setSessionLegacyTree(sessionLegacy);
+    })();
+  }, []);
+
+  console.log({ currentSessionTree });
+
+  React.useEffect(() => {
+    (async () => {
+      if (sessionId === null) {
+        const freshSessionId = await sessionClient.initNewSession();
+        console.log({ session: freshSessionId });
+        setSessionValue(freshSessionId.session_id);
+      }
+    })();
+  }, [sessionId]);
+
+  console.log({ sessionId });
+
   const [currentSelectedFile, setCurrentSelectedFile] =
-    // React.useState<FileSystemEntity | null>(null);
-    React.useState<FileSystemEntity | null>(
-      FileSystemEntity.dir_with_entities({ name: "src" }, [
-        FileSystemEntity.new_file({ name: "lib.rs" }),
-      ]).populateDepth().internal[0]
-    );
+    React.useState<FileSystemEntity | null>(null);
 
   console.log({ currentSelectedFile });
 
-  const [sourceCodeState, setSourceCodeState] =
-    React.useState<EditableFileSystem>({
-      ["lib.rs"]: sourceCodeFixture.sc,
-      ["Cargo.toml"]: "this is Cargo.toml",
-      ["Xargo.toml"]: "this is Xargo.toml",
-      ["Cargo.lock"]: "this is Cargo.lock",
-    });
+  // const [sourceCodeState, setSourceCodeState] =
+  //   React.useState<EditableFileSystem>({
+  //     ["lib.rs"]: sourceCodeFixture.sc,
+  //     ["Cargo.toml"]: "this is Cargo.toml",
+  //     ["Xargo.toml"]: "this is Xargo.toml",
+  //     ["Cargo.lock"]: "this is Cargo.lock",
+  //   });
 
-  const filesystem = new FileSystemSnake([
-    // FileSystemEntity.new_file({ name: "file.so" }),
-    FileSystemEntity.dir_with_entities({ name: "src" }, [
-      FileSystemEntity.dir_with_entities({ name: "project" }, [
-        FileSystemEntity.new_file({ name: "error.rs" }),
-        FileSystemEntity.new_file({ name: "instruction.rs" }),
-        FileSystemEntity.new_file({ name: "mod.rs" }),
-        FileSystemEntity.new_file({ name: "processor.rs" }),
-        FileSystemEntity.new_file({ name: "state.rs" }),
-      ]),
-      FileSystemEntity.new_file({ name: "lib.rs" }),
-      FileSystemEntity.new_file({ name: "entrypoint.rs" }),
-    ]).populateDepth(),
-    FileSystemEntity.new_file({ name: "Cargo.lock" }),
-    FileSystemEntity.new_file({ name: "Cargo.toml" }),
-    FileSystemEntity.new_file({ name: "Xargo.toml" }),
-  ]);
+  const [sourceCodeState, setSourceCodeState] =
+    React.useState<EditableFileSystem>({});
+
+  React.useEffect(() => {
+    // for (let i = 0; i < currentSessionTree.file_paths.length; i++)
+    if (isNil(currentSessionTree)) {
+      return;
+    }
+
+    const keys = Object.keys(currentSessionTree.file_paths);
+    for (let i = 0; i < keys.length; i++) {
+      const splittedPath = keys[i].split("/");
+      const path = splittedPath.slice(1).join("/");
+      console.log({ splittedPath, path });
+
+      const value = currentSessionTree.file_paths[keys[i]];
+      const buff = Buffer.from(value, "base64");
+      const text = buff.toString("utf8");
+
+      console.log({ path, value, text });
+
+      const newSourceCode = sourceCodeState;
+      newSourceCode[path] = text;
+      setSourceCodeState(newSourceCode);
+    }
+  }, [currentSessionTree]);
 
   const [filesystemStructure, setFileSystemStructure] =
-    React.useState<FileSystemSnake | null>(filesystem);
+    React.useState<FileSystemSnake | null>(null);
 
   const editableFileSystem: FileSystemState = {
     state: sourceCodeState,
     filesystem: filesystemStructure,
   };
 
-  const ideService = new IDEBackendService({
-    endpoint: "http://localhost:8081",
-  });
+  React.useEffect(() => {
+    (async () => {
+      // const filesystem = await ideService.fetchData();
+      if (isNil(currentSessionLegacyTree)) {
+        return;
+      }
+      // console.log({ filesystem })
+      const result: FileSystemEntity[] = [];
 
-  // useKeypair();
+      const populate = (
+        inputFs: SessionLegacyNode[] | null,
+        levelCache: FileSystemEntity[]
+      ) => {
+        console.log({ inputFs });
+        if (isNil(inputFs)) {
+          return;
+        }
 
-  // const token = jwt.new
+        for (let i = 0; i < inputFs.length; i++) {
+          const entity = inputFs[i];
 
-  // React.useEffect(() => {
-  //   (async () => {
-  //     const filesystem = await ideService.fetchData();
-  //     const result: FileSystemEntity[] = [];
+          if (entity.is_file) {
+            levelCache.push(FileSystemEntity.new_file({ name: entity.name }));
+          } else {
+            const thisCache = [];
 
-  //     const populate = (
-  //       inputFs: IDEFileEntity[] | null,
-  //       levelCache: FileSystemEntity[]
-  //     ) => {
-  //       if (isNil(inputFs)) {
-  //         return;
-  //       }
+            populate(entity.children, thisCache);
 
-  //       for (let i = 0; i < inputFs.length; i++) {
-  //         const entity = inputFs[i];
+            levelCache.push(
+              FileSystemEntity.dir_with_entities(
+                { name: entity.name },
+                thisCache
+              ).populateDepth()
+            );
+          }
+        }
+      };
+      populate(currentSessionLegacyTree, result);
+      console.log({ consistenTreeResult: result });
 
-  //         if (entity.IsFile) {
-  //           levelCache.push(FileSystemEntity.new_file({ name: entity.Name }));
-  //         } else {
-  //           const thisCache = [];
-
-  //           populate(entity.Children, thisCache);
-
-  //           levelCache.push(
-  //             FileSystemEntity.dir_with_entities(
-  //               { name: entity.Name },
-  //               thisCache
-  //             ).populateDepth()
-  //           );
-  //         }
-  //       }
-  //     };
-  //     populate(filesystem.Children, result);
-  //     console.log(result);
-
-  //     setFileSystemStructure(new FileSystemSnake(result));
-  //   })();
-  // }, []);
+      setFileSystemStructure(new FileSystemSnake(result));
+    })();
+  }, [currentSessionLegacyTree]);
 
   const currentEntityFilePath = currentSelectedFile?.currentEntityFilePath;
-  console.log({ currentEntityFilePath });
+  console.log({ currentEntityFilePath, currentSelectedFile });
 
   const editingBodyProps: EditingBodyProps = {
     sourceCode: sourceCodeState[currentEntityFilePath],
-    // filename: currentSelectedFile?.meta.name,
     filename: currentSelectedFile?.currentEntityFilePath,
     onSourceCodeChange: (newCode) => {
-      // sourceCodeState[currentSelectedFile] = newCode;
       const newState = Object.assign({}, sourceCodeState, {
         [currentEntityFilePath]: newCode,
       });
@@ -216,7 +257,7 @@ export default function Home() {
       setSourceCodeState(newState);
     },
   };
-  console.log({ filesystem: editableFileSystem.filesystem, editingBodyProps });
+  console.log({ sourceCode: editingBodyProps.sourceCode, filesystem: editableFileSystem.filesystem });
 
   const compilerProps: CompilerProps = {
     currentFile: currentSelectedFile,
@@ -230,10 +271,12 @@ export default function Home() {
           <FileExplorerSubHeading>Workspaces</FileExplorerSubHeading>
         </ExplorerHeadingContainer>
         <ExplorerWorkspaceLabel>default_workspace</ExplorerWorkspaceLabel>
-        <ExplorerFileSystem
-          filesystem={editableFileSystem.filesystem}
-          onSelectFile={(filename) => setCurrentSelectedFile(filename)}
-        />
+        {!isNil(editableFileSystem.filesystem) && (
+          <ExplorerFileSystem
+            filesystem={editableFileSystem.filesystem}
+            onSelectFile={(filename) => setCurrentSelectedFile(filename)}
+          />
+        )}
       </FilesystemSection>
     ),
     [SectionType.Compiler]: (

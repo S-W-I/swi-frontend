@@ -40,4 +40,5 @@ export function useLocalStorage<T>(
 
 export class LocalStorageManager {
   static PK_KEY = "swi_ide_pk";
+  static SESSION_ID = "session_id"
 }

@@ -30,47 +30,93 @@ class EditorColors {
   static EditBody = "rgb(17, 19, 46)";
 }
 
-const beardedtheme = require("vscode-themes/bearded-theme-arc-eggplant.json");
-
 const MonacoEditorComponent: React.FC<{
   code: string;
   onChange: (string) => void;
 }> = (props) => {
   const monaco = useMonaco();
 
+  // fetch("src/themes/Monokai.json")
+  //   .then((data) => data.json())
+  //   .then((data) => {
+  //     monaco.editor.defineTheme("tomorrow-night-blue", data);
+  //     monaco.editor.setTheme("tomorrow-night-blue");
+  //   });
+
   React.useEffect(() => {
-    if (monaco) {
-      console.log({ monaco, beardedtheme });
+    const definedTheme = require("themes/Tomorrow-Night-Blue-SWI.json");
 
-      // monaco.editor.defineTheme('hc-black', Object.assign(beardedtheme, { base: "hc-black"}));
-      // monaco.editor.defineTheme('monokai', JSON.stringify(beardedtheme));
-      // monaco.editor.setTheme('beardedtheme');
-      // monaco.editor.defineTheme("monokai", beardedtheme);
-
-      // monaco.editor.defineTheme("myTheme", {
-      //   base: "vs",
-      //   inherit: true,
-      //   rules: [{ background: "#11132e" }],
-      //   colors: {
-      //     "editor.foreground": "#000000",
-      //     "editor.background": "#EDF9FA",
-      //     "editorCursor.foreground": "#8B0000",
-      //     "editor.lineHighlightBackground": "#0000FF20",
-      //     "editorLineNumber.foreground": "#008800",
-      //     "editor.selectionBackground": "#88000030",
-      //     "editor.inactiveSelectionBackground": "#88000015",
-      //   },
-      // });
-      // monaco.editor.setTheme("myTheme");
+    if (monaco && definedTheme) {
+      monaco.editor.defineTheme("beardedtheme", definedTheme);
+      monaco.editor.setTheme("beardedtheme");
     }
   }, [monaco]);
 
   return (
     <Editor
       defaultLanguage="rust"
-      theme={"vs-dark"}
       // defaultValue="// some comment"
-      defaultValue={props.code}
+      // theme="tomorrow-night-blue"
+      theme="beardedtheme"
+      value={props.code}
+      options={{
+        acceptSuggestionOnCommitCharacter: true,
+        acceptSuggestionOnEnter: "on",
+        accessibilitySupport: "auto",
+        autoIndent: false,
+        automaticLayout: true,
+        codeLens: true,
+        colorDecorators: true,
+        contextmenu: true,
+        cursorBlinking: "blink",
+        cursorSmoothCaretAnimation: false,
+        cursorStyle: "line",
+        disableLayerHinting: false,
+        disableMonospaceOptimizations: false,
+        dragAndDrop: false,
+        fixedOverflowWidgets: false,
+        folding: true,
+        foldingStrategy: "auto",
+        fontLigatures: false,
+        formatOnPaste: false,
+        formatOnType: false,
+        hideCursorInOverviewRuler: false,
+        highlightActiveIndentGuide: true,
+        links: true,
+        mouseWheelZoom: false,
+        multiCursorMergeOverlapping: true,
+        multiCursorModifier: "alt",
+        overviewRulerBorder: true,
+        overviewRulerLanes: 2,
+        quickSuggestions: true,
+        quickSuggestionsDelay: 100,
+        readOnly: false,
+        renderControlCharacters: false,
+        renderFinalNewline: true,
+        renderIndentGuides: true,
+        renderLineHighlight: "all",
+        renderWhitespace: "none",
+        revealHorizontalRightPadding: 30,
+        roundedSelection: true,
+        rulers: [],
+        scrollBeyondLastColumn: 5,
+        scrollBeyondLastLine: true,
+        selectOnLineNumbers: true,
+        selectionClipboard: true,
+        selectionHighlight: true,
+        showFoldingControls: "mouseover",
+        smoothScrolling: false,
+        suggestOnTriggerCharacters: true,
+        wordBasedSuggestions: true,
+        wordSeparators: "~!@#$%^&*()-=+[{]}|;:'\",.<>/?",
+        wordWrap: "off",
+        wordWrapBreakAfterCharacters: "\t})]?|&,;",
+        wordWrapBreakBeforeCharacters: "{([+",
+        wordWrapBreakObtrusiveCharacters: ".",
+        wordWrapColumn: 80,
+        wordWrapMinified: true,
+        wrappingIndent: "none",
+      }}
       onChange={props.onChange}
     />
   );
@@ -160,28 +206,12 @@ const CONSOLE_HEIGHT = 197;
 
 export const MainEditingBody: React.FC<EditingBodyProps> = (props) => {
   const sourceCode = props.sourceCode || "";
-  console.log({ sourceCode });
   const numberOfLines = !sourceCode ? 0 : sourceCode.split(/\r\n|\r|\n/).length;
-  console.log({ numberOfLines, sourceCode });
 
   return (
     <MainEditingBodyContainer consoleHeight={CONSOLE_HEIGHT}>
       <MainEditingBodyTopBar>{props.filename}</MainEditingBodyTopBar>
       <MainEditingBodyFile>
-        {/* <MainEditingBodyCodeInput
-          value={sourceCode}
-          onChange={(x) => {
-            console.log({ x, val: x.target.value });
-            props.onSourceCodeChange(x.target.value);
-          }}
-        /> */}
-        {/* <MainTextArea
-          code={sourceCode}
-          // onChange={(x) => {
-          //   console.log({ x, val: x.target.value });
-          //   props.onSourceCodeChange(x.target.value);
-          // }}
-        /> */}
         <MonacoEditorComponent
           code={sourceCode}
           onChange={(x) => {
