@@ -1,4 +1,4 @@
-import { isNil } from "lodash"
+import { isNil } from "lodash";
 
 import { Checkbox } from "components/common/Checkbox";
 import { SelectList } from "components/common/SelectList";
@@ -15,9 +15,9 @@ export type CompilerProps = {
 
 export const CompilerSection: React.FC<CompilerProps> = (props) => {
   const [nightlyEnabled, triggerNightly] = React.useState(false);
-  
-  const buttonText = "Compile"
-  const onDownload = () => {}
+
+  const buttonText = "Compile";
+  const onDownload = () => {};
   // const buttonText = isNil(props.currentFile) ? 'Compile {"<no file selected>"}' : (
   //   isNil(props.currentFile.extension) ? "Cannot compile" :
   //   // `Compile ${props.currentFile}`
@@ -28,8 +28,8 @@ export const CompilerSection: React.FC<CompilerProps> = (props) => {
       <SelectList
         labelProps={{ value: "Compiler" }}
         values={[
-          { name: "version", value: "0.8.1" },
-          { name: "version", value: "0.8.5" },
+          { name: "0.8.1", value: "0.8.1" },
+          { name: "0.8.5", value: "0.8.5" },
         ]}
       />
       <Checkbox

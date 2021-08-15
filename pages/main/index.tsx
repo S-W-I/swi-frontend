@@ -96,7 +96,7 @@ function useKeypair() {
       console.log({ kp, encodedPrivateKey, data });
 
       setLsValue(encodedPrivateKey);
-      console.log({ lsValueCreated: lsValue })
+      console.log({ lsValueCreated: lsValue });
     } else {
       console.log({ lsValueMemorized: lsValue });
     }
@@ -105,8 +105,8 @@ function useKeypair() {
 
 export default function Home() {
   const [currentSection, setCurrentSection] = React.useState(
-    // SectionType.FileExplorers
-    SectionType.Compiler
+    SectionType.FileExplorers
+    // SectionType.Compiler
   );
   const [currentSelectedFile, setCurrentSelectedFile] =
     // React.useState<FileSystemEntity | null>(null);
@@ -126,8 +126,26 @@ export default function Home() {
       ["Cargo.lock"]: "this is Cargo.lock",
     });
 
+  const filesystem = new FileSystemSnake([
+    // FileSystemEntity.new_file({ name: "file.so" }),
+    FileSystemEntity.dir_with_entities({ name: "src" }, [
+      FileSystemEntity.dir_with_entities({ name: "project" }, [
+        FileSystemEntity.new_file({ name: "error.rs" }),
+        FileSystemEntity.new_file({ name: "instruction.rs" }),
+        FileSystemEntity.new_file({ name: "mod.rs" }),
+        FileSystemEntity.new_file({ name: "processor.rs" }),
+        FileSystemEntity.new_file({ name: "state.rs" }),
+      ]),
+      FileSystemEntity.new_file({ name: "lib.rs" }),
+      FileSystemEntity.new_file({ name: "entrypoint.rs" }),
+    ]).populateDepth(),
+    FileSystemEntity.new_file({ name: "Cargo.lock" }),
+    FileSystemEntity.new_file({ name: "Cargo.toml" }),
+    FileSystemEntity.new_file({ name: "Xargo.toml" }),
+  ]);
+
   const [filesystemStructure, setFileSystemStructure] =
-    React.useState<FileSystemSnake | null>(null);
+    React.useState<FileSystemSnake | null>(filesystem);
 
   const editableFileSystem: FileSystemState = {
     state: sourceCodeState,
@@ -138,48 +156,50 @@ export default function Home() {
     endpoint: "http://localhost:8081",
   });
 
-  useKeypair();
+  // useKeypair();
 
   // const token = jwt.new
 
-  React.useEffect(() => {
-    (async () => {
-      const filesystem = await ideService.fetchData();
-      const result: FileSystemEntity[] = [];
 
-      const populate = (
-        inputFs: IDEFileEntity[] | null,
-        levelCache: FileSystemEntity[]
-      ) => {
-        if (isNil(inputFs)) {
-          return;
-        }
 
-        for (let i = 0; i < inputFs.length; i++) {
-          const entity = inputFs[i];
+  // React.useEffect(() => {
+  //   (async () => {
+  //     const filesystem = await ideService.fetchData();
+  //     const result: FileSystemEntity[] = [];
 
-          if (entity.IsFile) {
-            levelCache.push(FileSystemEntity.new_file({ name: entity.Name }));
-          } else {
-            const thisCache = [];
+  //     const populate = (
+  //       inputFs: IDEFileEntity[] | null,
+  //       levelCache: FileSystemEntity[]
+  //     ) => {
+  //       if (isNil(inputFs)) {
+  //         return;
+  //       }
 
-            populate(entity.Children, thisCache);
+  //       for (let i = 0; i < inputFs.length; i++) {
+  //         const entity = inputFs[i];
 
-            levelCache.push(
-              FileSystemEntity.dir_with_entities(
-                { name: entity.Name },
-                thisCache
-              ).populateDepth()
-            );
-          }
-        }
-      };
-      populate(filesystem.Children, result);
-      console.log(result);
+  //         if (entity.IsFile) {
+  //           levelCache.push(FileSystemEntity.new_file({ name: entity.Name }));
+  //         } else {
+  //           const thisCache = [];
 
-      setFileSystemStructure(new FileSystemSnake(result));
-    })();
-  }, []);
+  //           populate(entity.Children, thisCache);
+
+  //           levelCache.push(
+  //             FileSystemEntity.dir_with_entities(
+  //               { name: entity.Name },
+  //               thisCache
+  //             ).populateDepth()
+  //           );
+  //         }
+  //       }
+  //     };
+  //     populate(filesystem.Children, result);
+  //     console.log(result);
+
+  //     setFileSystemStructure(new FileSystemSnake(result));
+  //   })();
+  // }, []);
 
   const currentEntityFilePath = currentSelectedFile?.currentEntityFilePath;
   console.log({ currentEntityFilePath });
