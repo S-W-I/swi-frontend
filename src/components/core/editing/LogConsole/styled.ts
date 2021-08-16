@@ -22,17 +22,14 @@ export const StyledSearchBar = styled.div`
 
 export const StyledLogWindow = styled.div`
   overflow: auto;
-  // height: 128px;
   height: 100%;
-
   padding-top: 30px;
   padding-left: 30px;
-
+  padding-bottom: 30px;
   font-family: Courier;
   font-style: normal;
   font-weight: normal;
   font-size: 14px;
   line-height: 16px;
-
   color: rgba(255, 255, 255, 0.6);
 `;

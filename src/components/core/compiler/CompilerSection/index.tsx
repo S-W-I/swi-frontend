@@ -1,10 +1,14 @@
+import React from "react";
 import { isNil } from "lodash";
+import Lottie from "lottie-react";
 
 import { Checkbox } from "components/common/Checkbox";
 import { SelectList } from "components/common/SelectList";
 import { Button } from "components/common/Button";
 
-import React from "react";
+import { WrappedButton } from "./styled";
+
+import loaderAnimation from "anims/loader/loader.json";
 
 import {
   StyledCompilerSection,
@@ -16,9 +20,9 @@ import { FileSystemEntity } from "parser/file";
 import { CompilationInfo } from "protobuf/session";
 
 export type CompilerProps = {
-  buttonName: string;
   currentFile: FileSystemEntity | null;
   compileInfo: CompilationInfo | null;
+  isProcessing: boolean;
   onCompile: () => void;
   onDownload: () => void;
 };
@@ -28,29 +32,26 @@ export const ErrorLog: React.FC<{ info: CompilationInfo }> = (props) => {
     return null;
   }
 
+  const lines = props.info.message.split("\n").map((x) => <span>{x}</span>);
+
   return (
     <StyledErrorLog>
-      <span>{props.info.message}</span>
+      {/* <span>{props.info.message}</span> */}
+      {lines}
     </StyledErrorLog>
   );
 };
 
 export const CompilerSection: React.FC<CompilerProps> = (props) => {
+  const { isProcessing } = props;
+  // const isProcessing = false;
+
   return (
     <StyledCompilerSection>
       <SelectList
         labelProps={{ value: "Compiler" }}
-        values={[
-          { name: "1.6.9", value: "1.6.9" },
-          // { name: "0.8.1", value: "0.8.1" },
-          // { name: "0.8.5", value: "0.8.5" },
-        ]}
+        values={[{ name: "1.6.9", value: "1.6.9" }]}
       />
-      {/* <Checkbox
-        label="Include nightly builds"
-        checked={nightlyEnabled}
-        onCheck={triggerNightly}
-      /> */}
       <SelectList
         labelProps={{ value: "Language" }}
         values={[{ name: "solana", value: "Solana" }]}
@@ -59,38 +60,30 @@ export const CompilerSection: React.FC<CompilerProps> = (props) => {
         labelProps={{ value: "BPF Version" }}
         values={[{ name: "bpf", value: "BPF Loader 3" }]}
       />
-      <MiscOptionsContainer>
-        {/* <Checkbox
-          label="Auto compile"
-          checked={nightlyEnabled}
-          onCheck={triggerNightly}
-        />
-        <Checkbox
-          label="Enable optimization"
-          checked={nightlyEnabled}
-          onCheck={triggerNightly}
-        />
-        <Checkbox
-          label="Hide warnings"
-          checked={nightlyEnabled}
-          onCheck={triggerNightly}
-        /> */}
-      </MiscOptionsContainer>
-      <Button onClick={props.onCompile}>Compile</Button>
+      <MiscOptionsContainer></MiscOptionsContainer>
+      <WrappedButton>
+        {isProcessing ? (
+          <>
+            <Button disabled style={{ cursor: "not-allowed" }}></Button>
+            <Lottie animationData={loaderAnimation} />
+          </>
+        ) : (
+          <>
+            <Button onClick={props.onCompile}>Compile</Button>
+          </>
+        )}
+      </WrappedButton>
       <hr className="simple" />
-
-      {props.compileInfo?.compile_error ? (
-        <ErrorLog info={props.compileInfo} />
-      ) : (
-        !isNil(props.compileInfo) && (
-          <Button
-            onClick={props.onDownload}
-            style={{ background: "rgb(46,4,202)" }}
-          >
-            Download
-          </Button>
-        )
-      )}
+      {props.compileInfo?.compile_error
+        ? null
+        : !isNil(props.compileInfo) && (
+            <Button
+              onClick={props.onDownload}
+              style={{ background: "rgb(46,4,202)" }}
+            >
+              Download
+            </Button>
+          )}
     </StyledCompilerSection>
   );
 };

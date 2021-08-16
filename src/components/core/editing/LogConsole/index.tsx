@@ -21,7 +21,8 @@ export const MainLogConsole: React.FC<{ consoleHeight: number }> = (props) => {
   return (
     <StyledMainLogConsole consoleHeight={props.consoleHeight}>
       <StyledSearchBar />
-      <StyledLogWindow>{Array(10).fill(mockBody)}</StyledLogWindow>
+      {/* <StyledLogWindow>{Array(10).fill(mockBody)}</StyledLogWindow> */}
+      <StyledLogWindow>{props.children}</StyledLogWindow>
     </StyledMainLogConsole>
   );
 };

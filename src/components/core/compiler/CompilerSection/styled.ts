@@ -20,12 +20,23 @@ export const StyledErrorLog = styled.div`
   color: rgba(246, 136, 136, 1);
   padding: 11px 18px;
   margin-top: 12px;
-  height: 100%;
   text-align: left;
   border-radius: 6px;
   border: 3px solid rgba(255, 0, 0, 0.08);
 
   & span {
-    word-break: break-word;
+    // word-break: break-word;
+    display: block;
+  }
+`;
+
+export const WrappedButton = styled.div`
+  position: relative;
+
+  & > :nth-child(2) {
+    width: 30px;
+    position: absolute;
+    top: 7px;
+    left: calc(50% - 15px);
   }
 `;

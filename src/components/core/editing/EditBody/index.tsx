@@ -15,6 +15,8 @@ import {
   StyledMainTextAreaLine,
   StyledMainTextAreaWord,
 } from "./styled";
+import { ErrorLog } from "components/core/compiler/CompilerSection";
+import { CompilationInfo } from "protobuf/session";
 
 class EditViewColors {
   static Default = "white";
@@ -139,16 +141,15 @@ const MainEditingBodyLineCounter: React.FC<{ numberOfLines: number }> = (
 export type EditingBodyProps = {
   sourceCode: string;
   filename: string;
+  compileInfo: CompilationInfo;
   onSourceCodeChange: (string) => void;
 };
 
-// const TEMPORARY_VIEWED_FILES_COUNT = 3
 
-const CONSOLE_HEIGHT = 197;
+const CONSOLE_HEIGHT = 260;
 
 export const MainEditingBody: React.FC<EditingBodyProps> = (props) => {
   const sourceCode = props.sourceCode || "";
-  const numberOfLines = !sourceCode ? 0 : sourceCode.split(/\r\n|\r|\n/).length;
 
   return (
     <MainEditingBodyContainer consoleHeight={CONSOLE_HEIGHT}>
@@ -161,7 +162,9 @@ export const MainEditingBody: React.FC<EditingBodyProps> = (props) => {
           }}
         />
       </MainEditingBodyFile>
-      <MainLogConsole consoleHeight={CONSOLE_HEIGHT} />
+      <MainLogConsole consoleHeight={CONSOLE_HEIGHT}>
+        <ErrorLog info={props.compileInfo} />
+      </MainLogConsole>
     </MainEditingBodyContainer>
   );
 };

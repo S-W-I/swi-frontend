@@ -2,9 +2,10 @@ import React from "react";
 import Head from "next/head";
 
 import { Subject } from "rxjs";
+import { isNil } from "lodash";
 import { debounceTime } from "rxjs/operators";
 
-import { isNil } from "lodash";
+import FileDownload from "js-file-download";
 
 import { IDEActionSection } from "components/core/ActionSection";
 import { MainLogConsole } from "components/core/editing/LogConsole";
@@ -91,6 +92,8 @@ export default function Home() {
   const [compileInfo, setCompileInfo] = React.useState<CompilationInfo | null>(
     null
   );
+  const [isCompilationProcessing, setIsCompilationProcessing] =
+    React.useState(false);
   const [compileCodeSubject] = React.useState(new Subject<null>());
 
   console.log({ compileInfo });
@@ -99,11 +102,15 @@ export default function Home() {
     const subscription = compileCodeSubject
       .pipe(debounceTime(300))
       .subscribe(async () => {
+        setIsCompilationProcessing(true);
+        setCompileInfo(null);
+
         const compilationInfo = await sessionClient.compileSessionCode(
           sessionId
         );
 
         setCompileInfo(compilationInfo);
+        setIsCompilationProcessing(false);
       });
 
     return () => subscription.unsubscribe();
@@ -252,6 +259,7 @@ export default function Home() {
   const currentEntityFilePath = currentSelectedFile?.currentEntityFilePath;
 
   const editingBodyProps: EditingBodyProps = {
+    compileInfo,
     sourceCode: sourceCodeState[currentEntityFilePath],
     filename: currentSelectedFile?.currentEntityFilePath,
     onSourceCodeChange: (newCode) => {
@@ -270,9 +278,14 @@ export default function Home() {
 
   const compilerProps: CompilerProps = {
     currentFile: currentSelectedFile,
+    isProcessing: isCompilationProcessing,
     compileInfo,
     onCompile: () => {
       compileCodeSubject.next(null);
+    },
+    onDownload: async () => {
+      const data = await sessionClient.downloadSessionCompiledCode(sessionId);
+      FileDownload(data, "helloworld.so");
     },
   };
 
@@ -309,12 +322,35 @@ export default function Home() {
     <div className="container">
       <Head>
         <title>SWI | Solana Web Interface</title>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon/favicon.ico" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/favicon/apple-touch-icon.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon/favicon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/favicon/favicon-16x16.png"
+        />
+        <link rel="manifest" href="/favicon/site.webmanifest" />
+        <link
+          rel="mask-icon"
+          href="/favicon/safari-pinned-tab.svg"
+          color="#5bbad5"
+        />
+        <meta name="msapplication-TileColor" content="#da532c" />
+        <meta name="theme-color" content="#ffffff" />
       </Head>
 
       <HomeContainer>
-        {/* <IDEActionSection></IDEActionSection> */}
-
         <ViewSelectSection className="separator">
           <LogoContainer>
             <img src="/app/logo.svg" />
