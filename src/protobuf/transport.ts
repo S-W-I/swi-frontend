@@ -1,6 +1,6 @@
 /* eslint-disable */
-import { util, configure, Writer, Reader } from "protobufjs/minimal";
-import * as Long from "long";
+import Long from "long";
+import _m0 from "protobufjs/minimal";
 
 export const protobufPackage = "";
 
@@ -35,16 +35,16 @@ const baseDropResponseMessage: object = { message: "" };
 export const DropResponseMessage = {
   encode(
     message: DropResponseMessage,
-    writer: Writer = Writer.create()
-  ): Writer {
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.message !== "") {
       writer.uint32(10).string(message.message);
     }
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): DropResponseMessage {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): DropResponseMessage {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseDropResponseMessage } as DropResponseMessage;
     while (reader.pos < end) {
@@ -93,16 +93,16 @@ const baseRequestSessionBody: object = { session_id: "" };
 export const RequestSessionBody = {
   encode(
     message: RequestSessionBody,
-    writer: Writer = Writer.create()
-  ): Writer {
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.session_id !== "") {
       writer.uint32(10).string(message.session_id);
     }
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): RequestSessionBody {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): RequestSessionBody {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseRequestSessionBody } as RequestSessionBody;
     while (reader.pos < end) {
@@ -149,7 +149,10 @@ export const RequestSessionBody = {
 const baseUpdateSessionBody: object = { session_id: "" };
 
 export const UpdateSessionBody = {
-  encode(message: UpdateSessionBody, writer: Writer = Writer.create()): Writer {
+  encode(
+    message: UpdateSessionBody,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.session_id !== "") {
       writer.uint32(10).string(message.session_id);
     }
@@ -162,8 +165,8 @@ export const UpdateSessionBody = {
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): UpdateSessionBody {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateSessionBody {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseUpdateSessionBody } as UpdateSessionBody;
     message.tree = {};
@@ -242,8 +245,8 @@ const baseUpdateSessionBody_TreeEntry: object = { key: "", value: "" };
 export const UpdateSessionBody_TreeEntry = {
   encode(
     message: UpdateSessionBody_TreeEntry,
-    writer: Writer = Writer.create()
-  ): Writer {
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.key !== "") {
       writer.uint32(10).string(message.key);
     }
@@ -254,10 +257,10 @@ export const UpdateSessionBody_TreeEntry = {
   },
 
   decode(
-    input: Reader | Uint8Array,
+    input: _m0.Reader | Uint8Array,
     length?: number
   ): UpdateSessionBody_TreeEntry {
-    const reader = input instanceof Reader ? input : new Reader(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
       ...baseUpdateSessionBody_TreeEntry,
@@ -328,16 +331,16 @@ const baseCompileSessionBody: object = { session_id: "" };
 export const CompileSessionBody = {
   encode(
     message: CompileSessionBody,
-    writer: Writer = Writer.create()
-  ): Writer {
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.session_id !== "") {
       writer.uint32(10).string(message.session_id);
     }
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): CompileSessionBody {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): CompileSessionBody {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseCompileSessionBody } as CompileSessionBody;
     while (reader.pos < end) {
@@ -386,8 +389,8 @@ const baseDownloadCompiledSessionBody: object = { session_id: "" };
 export const DownloadCompiledSessionBody = {
   encode(
     message: DownloadCompiledSessionBody,
-    writer: Writer = Writer.create()
-  ): Writer {
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.session_id !== "") {
       writer.uint32(10).string(message.session_id);
     }
@@ -395,10 +398,10 @@ export const DownloadCompiledSessionBody = {
   },
 
   decode(
-    input: Reader | Uint8Array,
+    input: _m0.Reader | Uint8Array,
     length?: number
   ): DownloadCompiledSessionBody {
-    const reader = input instanceof Reader ? input : new Reader(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
       ...baseDownloadCompiledSessionBody,
@@ -468,9 +471,7 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
-// If you get a compile-error about 'Constructor<Long> and ... have no overlap',
-// add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
-if (util.Long !== Long) {
-  util.Long = Long as any;
-  configure();
+if (_m0.util.Long !== Long) {
+  _m0.util.Long = Long as any;
+  _m0.configure();
 }

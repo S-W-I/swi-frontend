@@ -1,6 +1,6 @@
 /* eslint-disable */
-import { util, configure, Writer, Reader } from "protobufjs/minimal";
-import * as Long from "long";
+import Long from "long";
+import _m0 from "protobufjs/minimal";
 
 export const protobufPackage = "";
 
@@ -48,7 +48,10 @@ const baseSession: object = {
 };
 
 export const Session = {
-  encode(message: Session, writer: Writer = Writer.create()): Writer {
+  encode(
+    message: Session,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.ttl !== 0) {
       writer.uint32(8).uint64(message.ttl);
     }
@@ -67,8 +70,8 @@ export const Session = {
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): Session {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): Session {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseSession } as Session;
     while (reader.pos < end) {
@@ -176,7 +179,10 @@ const baseCompilationInfo: object = {
 };
 
 export const CompilationInfo = {
-  encode(message: CompilationInfo, writer: Writer = Writer.create()): Writer {
+  encode(
+    message: CompilationInfo,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.version !== "") {
       writer.uint32(10).string(message.version);
     }
@@ -189,8 +195,8 @@ export const CompilationInfo = {
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): CompilationInfo {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): CompilationInfo {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseCompilationInfo } as CompilationInfo;
     while (reader.pos < end) {
@@ -266,7 +272,10 @@ export const CompilationInfo = {
 const baseSessionLegacyNode: object = { name: "", is_file: false };
 
 export const SessionLegacyNode = {
-  encode(message: SessionLegacyNode, writer: Writer = Writer.create()): Writer {
+  encode(
+    message: SessionLegacyNode,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
@@ -279,8 +288,8 @@ export const SessionLegacyNode = {
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): SessionLegacyNode {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): SessionLegacyNode {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseSessionLegacyNode } as SessionLegacyNode;
     message.children = [];
@@ -366,7 +375,10 @@ export const SessionLegacyNode = {
 const baseSessionTree: object = { files_order: "" };
 
 export const SessionTree = {
-  encode(message: SessionTree, writer: Writer = Writer.create()): Writer {
+  encode(
+    message: SessionTree,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     Object.entries(message.file_paths).forEach(([key, value]) => {
       SessionTree_FilePathsEntry.encode(
         { key: key as any, value },
@@ -379,8 +391,8 @@ export const SessionTree = {
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): SessionTree {
-    const reader = input instanceof Reader ? input : new Reader(input);
+  decode(input: _m0.Reader | Uint8Array, length?: number): SessionTree {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseSessionTree } as SessionTree;
     message.file_paths = {};
@@ -466,8 +478,8 @@ const baseSessionTree_FilePathsEntry: object = { key: "", value: "" };
 export const SessionTree_FilePathsEntry = {
   encode(
     message: SessionTree_FilePathsEntry,
-    writer: Writer = Writer.create()
-  ): Writer {
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
     if (message.key !== "") {
       writer.uint32(10).string(message.key);
     }
@@ -478,10 +490,10 @@ export const SessionTree_FilePathsEntry = {
   },
 
   decode(
-    input: Reader | Uint8Array,
+    input: _m0.Reader | Uint8Array,
     length?: number
   ): SessionTree_FilePathsEntry {
-    const reader = input instanceof Reader ? input : new Reader(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
       ...baseSessionTree_FilePathsEntry,
@@ -582,9 +594,7 @@ function longToNumber(long: Long): number {
   return long.toNumber();
 }
 
-// If you get a compile-error about 'Constructor<Long> and ... have no overlap',
-// add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
-if (util.Long !== Long) {
-  util.Long = Long as any;
-  configure();
+if (_m0.util.Long !== Long) {
+  _m0.util.Long = Long as any;
+  _m0.configure();
 }
