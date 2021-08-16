@@ -84,6 +84,10 @@ export class SessionClient {
     return CompilationInfo.fromJSON(resp.data.result);
   }
 
+  buildDownloadSessionCompileCodeLink(session_id: string): string {
+    return `${this.endpoint}/session/code/download/alt?session=${session_id}`;
+  }
+
   async downloadSessionCompiledCode(session_id: string): Promise<Uint8Array> {
     const resp = await axios.post(
       "/session/code/download",

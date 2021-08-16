@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const StyledButton = styled.button`
+const buttonStyles = `
   width: 215px;
   height: 42px;
 
@@ -19,4 +19,18 @@ export const StyledButton = styled.button`
   border-radius: 3px;
 
   cursor: pointer;
+`;
+
+export const StyledButton = styled.button`
+  ${buttonStyles}
+`;
+
+export const StyledAnchor = styled.a`
+  ${buttonStyles}
+
+  display: block;
+
+  text-decoration: none;
+  text-align: center;
+  padding: 11px;
 `;

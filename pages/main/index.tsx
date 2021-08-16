@@ -5,8 +5,6 @@ import { Subject } from "rxjs";
 import { isNil } from "lodash";
 import { debounceTime } from "rxjs/operators";
 
-import FileDownload from "js-file-download";
-
 import { IDEActionSection } from "components/core/ActionSection";
 import { MainLogConsole } from "components/core/editing/LogConsole";
 
@@ -95,8 +93,6 @@ export default function Home() {
   const [isCompilationProcessing, setIsCompilationProcessing] =
     React.useState(false);
   const [compileCodeSubject] = React.useState(new Subject<null>());
-
-  console.log({ compileInfo });
 
   React.useEffect(() => {
     const subscription = compileCodeSubject
@@ -215,18 +211,15 @@ export default function Home() {
 
   React.useEffect(() => {
     (async () => {
-      // const filesystem = await ideService.fetchData();
       if (isNil(currentSessionLegacyTree)) {
         return;
       }
-      // console.log({ filesystem })
       const result: FileSystemEntity[] = [];
 
       const populate = (
         inputFs: SessionLegacyNode[] | null,
         levelCache: FileSystemEntity[]
       ) => {
-        console.log({ inputFs });
         if (isNil(inputFs)) {
           return;
         }
@@ -283,10 +276,7 @@ export default function Home() {
     onCompile: () => {
       compileCodeSubject.next(null);
     },
-    onDownload: async () => {
-      const data = await sessionClient.downloadSessionCompiledCode(sessionId);
-      FileDownload(data, "helloworld.so");
-    },
+    downloadLink: sessionClient.buildDownloadSessionCompileCodeLink(sessionId)
   };
 
   const sectionsMapping = {

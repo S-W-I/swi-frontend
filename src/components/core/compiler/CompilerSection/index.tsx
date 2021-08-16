@@ -4,7 +4,7 @@ import Lottie from "lottie-react";
 
 import { Checkbox } from "components/common/Checkbox";
 import { SelectList } from "components/common/SelectList";
-import { Button } from "components/common/Button";
+import { Button, AnchorButton } from "components/common/Button";
 
 import { WrappedButton } from "./styled";
 
@@ -24,7 +24,8 @@ export type CompilerProps = {
   compileInfo: CompilationInfo | null;
   isProcessing: boolean;
   onCompile: () => void;
-  onDownload: () => void;
+  // onDownload: () => void;
+  downloadLink: string;
 };
 
 export const ErrorLog: React.FC<{ info: CompilationInfo }> = (props) => {
@@ -77,12 +78,13 @@ export const CompilerSection: React.FC<CompilerProps> = (props) => {
       {props.compileInfo?.compile_error
         ? null
         : !isNil(props.compileInfo) && (
-            <Button
-              onClick={props.onDownload}
+            <AnchorButton
+              href={props.downloadLink}
               style={{ background: "rgb(46,4,202)" }}
+              target="_blank"
             >
               Download
-            </Button>
+            </AnchorButton>
           )}
     </StyledCompilerSection>
   );
